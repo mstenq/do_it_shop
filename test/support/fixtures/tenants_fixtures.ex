@@ -5,16 +5,18 @@ defmodule DoItShop.TenantsFixtures do
   """
 
   @doc """
-  Generate a org.
+  Generate a role.
   """
-  def org_fixture(attrs \\ %{}) do
-    {:ok, org} =
+  def role_fixture(attrs \\ %{}) do
+    {:ok, role} =
       attrs
       |> Enum.into(%{
-        company_name: "some company_name"
+        description: "some description",
+        org_id: 42,
+        role: "some role"
       })
-      |> DoItShop.Tenants.create_org()
+      |> DoItShop.Tenants.create_role()
 
-    org
+    role
   end
 end

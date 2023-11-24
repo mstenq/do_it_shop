@@ -4,6 +4,7 @@ defmodule DoItShop.Repo.Migrations.CreateUsersAuthTables do
   def change do
     execute "CREATE EXTENSION IF NOT EXISTS citext", ""
 
+    # ORGANIZATIONS
     create table(:orgs, primary_key: false) do
       add :org_id, :bigserial, primary_key: true
       add :company_name, :string
@@ -11,13 +12,36 @@ defmodule DoItShop.Repo.Migrations.CreateUsersAuthTables do
       timestamps(type: :utc_datetime)
     end
 
+    # ROLES
+    create table(:roles) do
+      add :org_id,
+          references(:orgs, column: :org_id, on_delete: :delete_all),
+          null: false
+
+      add :role, :string
+      add :description, :string
+
+      timestamps(type: :utc_datetime)
+    end
+
+    create unique_index(:roles, [:role, :org_id])
+    create index(:roles, [:org_id])
+
+    # USERS
     create table(:users) do
       add :email, :citext, null: false
+      add :first_name, :string
+      add :last_name, :string
+
       add :hashed_password, :string, null: false
       add :confirmed_at, :naive_datetime
 
+      add :role_id,
+          references(:roles, on_delete: :delete_all),
+          null: false
+
       add :org_id,
-          references(:orgs, column: :org_id),
+          references(:orgs, column: :org_id, on_delete: :delete_all),
           null: false
 
       timestamps(type: :utc_datetime)
@@ -26,6 +50,7 @@ defmodule DoItShop.Repo.Migrations.CreateUsersAuthTables do
     create unique_index(:users, [:email])
     create index(:users, [:org_id])
 
+    # USER TOKENS
     create table(:users_tokens) do
       add :user_id, references(:users, on_delete: :delete_all), null: false
       add :token, :binary, null: false

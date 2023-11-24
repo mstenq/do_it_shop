@@ -7,7 +7,7 @@ defmodule DoItShop.Accounts do
   alias DoItShop.Repo
 
   alias DoItShop.Accounts.{User, UserToken, UserNotifier}
-  alias DoItShop.Tenant
+  alias DoItShop.Tenants
 
   ## Database getters
 
@@ -81,10 +81,14 @@ defmodule DoItShop.Accounts do
     # |> Ecto.Multi.create(:org, Org.changeset(attrs))
     # |> Ecto.Multi.create(:tokens, UserToken.by_user_and_contexts_query(user, ["confirm"]))
 
-    case Tenant.create_org(attrs) do
-      {:ok, org} ->
+    case Tenants.create_org(attrs) do
+      {:ok, org, admin_role} ->
+        IO.inspect(admin_role, label: "admin_role")
+        user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => admin_role.id})
+        IO.inspect(user_attr, label: "user_attr")
+
         %User{}
-        |> User.registration_changeset(Map.put(attrs, "org_id", org.org_id))
+        |> User.registration_changeset(user_attr)
         |> Repo.insert()
 
       {:error, _} ->

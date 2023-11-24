@@ -2,12 +2,21 @@ defmodule DoItShop.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias DoItShop.Tenants.Org
+  alias DoItShop.Tenants.Role
+
   schema "users" do
-    field :org_id, :integer
     field :email, :string
-    field :password, :string, virtual: true, redact: true
+    field :first_name, :string
+    field :last_name, :string
+
+    belongs_to :org, Org, references: :org_id
+    belongs_to :role, Role
+
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
+
+    field :password, :string, virtual: true, redact: true
     field :company_name, :string, virtual: true
 
     timestamps(type: :utc_datetime)
@@ -38,8 +47,8 @@ defmodule DoItShop.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:org_id, :company_name, :email, :password])
-    |> validate_required([:company_name, :org_id])
+    |> cast(attrs, [:org_id, :role_id, :company_name, :email, :password])
+    |> validate_required([:company_name, :org_id, :role_id])
     |> validate_email(opts)
     |> validate_password(opts)
   end

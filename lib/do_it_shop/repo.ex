@@ -9,14 +9,6 @@ defmodule DoItShop.Repo do
 
   @impl true
   def prepare_query(_operation, query, opts) do
-    IO.puts("################################")
-    IO.puts("prepare_query")
-    IO.inspect(query)
-    IO.puts("################################")
-    IO.puts("opts")
-    IO.inspect(opts)
-    IO.puts("################################")
-
     cond do
       opts[:skip_org_id] || opts[:schema_migration] ->
         {query, opts}

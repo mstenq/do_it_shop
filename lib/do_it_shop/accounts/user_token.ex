@@ -14,7 +14,6 @@ defmodule DoItShop.Accounts.UserToken do
   @session_validity_in_days 60
 
   schema "users_tokens" do
-    field :org_id, :integer
     field :token, :binary
     field :context, :string
     field :sent_to, :string

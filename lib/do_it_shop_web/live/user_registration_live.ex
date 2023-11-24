@@ -1,13 +1,13 @@
 defmodule DoItShopWeb.UserRegistrationLive do
   use DoItShopWeb, :live_view
 
-  alias DoItShop.Tenant
+  alias DoItShop.Tenants
   alias DoItShop.Accounts
   alias DoItShop.Accounts.User
 
   def render(assigns) do
     ~H"""
-    <div class="max-w-sm p-8 mx-auto rounded shadow bg-base-100">
+    <div class="bg-base-100 mx-auto max-w-sm rounded p-8 shadow">
       <.header class="text-center">
         Register for an account
         <:subtitle>
