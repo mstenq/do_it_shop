@@ -47,10 +47,17 @@ defmodule DoItShop.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:org_id, :role_id, :company_name, :email, :password])
-    |> validate_required([:company_name, :org_id, :role_id])
+    |> cast(attrs, [:org_id, :role_id, :company_name, :email, :password, :first_name, :last_name])
+    |> validate_required([:company_name, :org_id, :role_id, :first_name, :last_name])
     |> validate_email(opts)
     |> validate_password(opts)
+  end
+
+  def add_user_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:role_id, :email, :first_name, :last_name])
+    |> validate_required([:role_id, :first_name, :last_name])
+    |> validate_email(opts)
   end
 
   def validate_email(changeset, opts) do

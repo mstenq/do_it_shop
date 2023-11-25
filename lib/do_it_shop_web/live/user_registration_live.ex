@@ -1,7 +1,6 @@
 defmodule DoItShopWeb.UserRegistrationLive do
   use DoItShopWeb, :live_view
 
-  alias DoItShop.Tenants
   alias DoItShop.Accounts
   alias DoItShop.Accounts.User
 
@@ -33,6 +32,8 @@ defmodule DoItShopWeb.UserRegistrationLive do
         </.error>
 
         <.input field={@form[:company_name]} label="Company Name" />
+        <.input field={@form[:first_name]} label="First Name" />
+        <.input field={@form[:last_name]} label="Last Name" />
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
 

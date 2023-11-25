@@ -11,6 +11,7 @@ module.exports = {
     "../lib/do_it_shop_web.ex",
     "../lib/do_it_shop_web/**/*.*ex",
   ],
+  darkMode: "class",
   daisyui: {
     logs: false,
   },

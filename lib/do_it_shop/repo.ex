@@ -22,7 +22,6 @@ defmodule DoItShop.Repo do
   end
 
   def put_org_id(org_id) do
-    IO.inspect("putting org_id: #{org_id}")
     Process.put(@tenant_key, org_id)
   end
 

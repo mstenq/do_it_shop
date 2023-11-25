@@ -9,6 +9,14 @@ defmodule DoItShop.Accounts do
   alias DoItShop.Accounts.{User, UserToken, UserNotifier}
   alias DoItShop.Tenants
 
+  def get_topic do
+    inspect(__MODULE__) <> Repo.get_org_id()
+  end
+
+  def subscribe do
+    Phoenix.PubSub.subscribe(DoItShop.PubSub, "user:created")
+  end
+
   ## Database getters
 
   @doc """
@@ -77,15 +85,9 @@ defmodule DoItShop.Accounts do
 
   """
   def register_user(attrs) do
-    # Ecto.Multi.new()
-    # |> Ecto.Multi.create(:org, Org.changeset(attrs))
-    # |> Ecto.Multi.create(:tokens, UserToken.by_user_and_contexts_query(user, ["confirm"]))
-
     case Tenants.create_org(attrs) do
       {:ok, org, admin_role} ->
-        IO.inspect(admin_role, label: "admin_role")
         user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => admin_role.id})
-        IO.inspect(user_attr, label: "user_attr")
 
         %User{}
         |> User.registration_changeset(user_attr)
@@ -107,6 +109,26 @@ defmodule DoItShop.Accounts do
   """
   def change_user_registration(%User{} = user, attrs \\ %{}) do
     User.registration_changeset(user, attrs, hash_password: false, validate_email: false)
+  end
+
+  def add_user_to_org(attrs) do
+    org_id = Repo.get_org_id()
+    temporary_password = "temporary_password"
+
+    user_attrs =
+      Map.merge(attrs, %{
+        "org_id" => org_id,
+        "password" => temporary_password,
+        "company_name" => "I suck at coding"
+      })
+
+    %User{}
+    |> User.registration_changeset(user_attrs)
+    |> Repo.insert()
+  end
+
+  def change_user_add_to_org(%User{} = user, attrs \\ %{}) do
+    User.add_user_changeset(user, attrs)
   end
 
   ## Settings
@@ -154,7 +176,7 @@ defmodule DoItShop.Accounts do
     context = "change:#{user.email}"
 
     with {:ok, query} <- UserToken.verify_change_email_token_query(token, context),
-         %UserToken{sent_to: email} <- Repo.one(query),
+         %UserToken{sent_to: email} <- Repo.one(query, skip_org_id: true),
          {:ok, _} <- Repo.transaction(user_email_multi(user, email, context)) do
       :ok
     else
@@ -223,7 +245,9 @@ defmodule DoItShop.Accounts do
 
     Ecto.Multi.new()
     |> Ecto.Multi.update(:user, changeset)
-    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all))
+    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all),
+      skip_org_id: true
+    )
     |> Repo.transaction()
     |> case do
       {:ok, %{user: user}} -> {:ok, user}
@@ -283,6 +307,12 @@ defmodule DoItShop.Accounts do
     end
   end
 
+  def deliver_user_new_account_instructions(%User{} = user, reset_url_fun) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
+    Repo.insert!(user_token, repo_opts: [skip_org_id: true])
+    UserNotifier.deliver_new_account_instructions(user, reset_url_fun.(encoded_token))
+  end
+
   @doc """
   Confirms a user by the given token.
 
@@ -337,7 +367,7 @@ defmodule DoItShop.Accounts do
   """
   def get_user_by_reset_password_token(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
-         %User{} = user <- Repo.one(query) do
+         %User{} = user <- Repo.one(query, skip_org_id: true) do
       user
     else
       _ -> nil
@@ -358,8 +388,10 @@ defmodule DoItShop.Accounts do
   """
   def reset_user_password(user, attrs) do
     Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, User.password_changeset(user, attrs))
-    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all))
+    |> Ecto.Multi.update(:user, User.password_changeset(user, attrs), skip_org_id: true)
+    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all),
+      skip_org_id: true
+    )
     |> Repo.transaction()
     |> case do
       {:ok, %{user: user}} -> {:ok, user}
@@ -368,6 +400,8 @@ defmodule DoItShop.Accounts do
   end
 
   def list_users do
-    Repo.all(User)
+    User
+    |> Repo.all()
+    |> Repo.preload(:role)
   end
 end

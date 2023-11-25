@@ -68,7 +68,9 @@ defmodule DoItShopWeb.Router do
       on_mount: [{DoItShopWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
-      live "/employees", UserListLive
+
+      live "/employees", EmployeeLive.Index, :index
+      live "/employees/new", EmployeeLive.Index, :new
     end
   end
 

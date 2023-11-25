@@ -59,7 +59,6 @@ defmodule DoItShop.Tenants do
         case create_default_roles(org.org_id) do
           {:ok, created_roles} ->
             admin_role = Enum.find(created_roles, fn role -> role.role == "admin" end)
-            IO.inspect(admin_role, label: "admin_role")
             {:ok, org, admin_role}
 
           {:error, _} ->
@@ -189,9 +188,6 @@ defmodule DoItShop.Tenants do
         {:ok, role} = create_role(Map.put(role, :org_id, org_id))
         role
       end)
-
-    IO.inspect(created_roles, label: "created_roles")
-    IO.inspect(hd(created_roles), label: "first_createdRole")
 
     {:ok, created_roles}
   end

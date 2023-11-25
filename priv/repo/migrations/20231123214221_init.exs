@@ -30,8 +30,8 @@ defmodule DoItShop.Repo.Migrations.CreateUsersAuthTables do
     # USERS
     create table(:users) do
       add :email, :citext, null: false
-      add :first_name, :string
-      add :last_name, :string
+      add :first_name, :string, null: false
+      add :last_name, :string, null: false
 
       add :hashed_password, :string, null: false
       add :confirmed_at, :naive_datetime

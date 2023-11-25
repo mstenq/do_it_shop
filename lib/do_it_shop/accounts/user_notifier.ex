@@ -58,6 +58,24 @@ defmodule DoItShop.Accounts.UserNotifier do
   end
 
   @doc """
+  Deliver instructions to reset a user password.
+  """
+  def deliver_new_account_instructions(user, url) do
+    deliver(user.email, "Welcome to Do It Shop", """
+
+    ==============================
+
+    Hi #{user.email},
+
+    You can setup your account password by visiting the URL below:
+
+    #{url}
+
+    ==============================
+    """)
+  end
+
+  @doc """
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do
