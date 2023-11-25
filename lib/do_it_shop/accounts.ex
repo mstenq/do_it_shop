@@ -10,11 +10,24 @@ defmodule DoItShop.Accounts do
   alias DoItShop.Tenants
 
   def get_topic do
-    inspect(__MODULE__) <> Repo.get_org_id()
+    "Accounts" <> Integer.to_string(Repo.get_org_id())
   end
 
   def subscribe do
-    Phoenix.PubSub.subscribe(DoItShop.PubSub, "user:created")
+    Phoenix.PubSub.subscribe(DoItShop.PubSub, get_topic())
+  end
+
+  @doc """
+  tags: [:user_created]
+  todo: need to implement [:user_updated, :user_deleted]
+  """
+  def broadcast({:ok, user}, tag) do
+    Phoenix.PubSub.broadcast(DoItShop.PubSub, get_topic(), {tag, user})
+  end
+
+  def broadcast(_, _tag) do
+    IO.inspect("error broadcasting user", label: "broadcast error", pretty: true)
+    :error
   end
 
   ## Database getters
@@ -68,7 +81,15 @@ defmodule DoItShop.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id), do: Repo.get!(User, id) |> Repo.preload([:role, :org])
+
+  def broadcast_user({:ok, user}, tag) do
+    IO.puts("broadcasting user")
+    IO.inspect(get_user!(user.id), label: "get_user!", pretty: true)
+    # broadcast(, tag)
+  end
+
+  def broadcast_user({:error, _}, _tag), do: :error
 
   ## User registration
 
@@ -92,6 +113,8 @@ defmodule DoItShop.Accounts do
         %User{}
         |> User.registration_changeset(user_attr)
         |> Repo.insert()
+
+      # |> broadcast_user(:user_created)
 
       {:error, _} ->
         {:error, %Ecto.Changeset{}}
@@ -125,6 +148,8 @@ defmodule DoItShop.Accounts do
     %User{}
     |> User.registration_changeset(user_attrs)
     |> Repo.insert()
+
+    # |> broadcast_user(:user_created)
   end
 
   def change_user_add_to_org(%User{} = user, attrs \\ %{}) do

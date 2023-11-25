@@ -7,6 +7,10 @@ defmodule DoItShopWeb.EmployeeLive.Index do
   alias DoItShop.Accounts.User
 
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      # Accounts.subscribe()
+    end
+
     {:ok, stream(socket, :employees, Accounts.list_users())}
   end
 
@@ -118,5 +122,9 @@ defmodule DoItShopWeb.EmployeeLive.Index do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
     end
+  end
+
+  def handle_info({:user_created, user}, socket) do
+    {:noreply, stream_insert(socket, :employees, user)}
   end
 end

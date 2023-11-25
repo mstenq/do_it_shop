@@ -12,7 +12,7 @@ defmodule DoItShop.Application do
       DoItShop.Repo,
       {DNSCluster, query: Application.get_env(:do_it_shop, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: DoItShop.PubSub},
-      DoItShop.Presence,
+      DoItShopWeb.Presence,
       # Start the Finch HTTP client for sending emails
       {Finch, name: DoItShop.Finch},
       # Start a worker by calling: DoItShop.Worker.start_link(arg)
