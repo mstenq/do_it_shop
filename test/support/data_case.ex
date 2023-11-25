@@ -18,6 +18,8 @@ defmodule DoItShop.DataCase do
 
   using do
     quote do
+      use Oban.Testing, repo: DoItShop.Repo
+
       alias DoItShop.Repo
 
       import Ecto

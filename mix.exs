@@ -33,6 +33,15 @@ defmodule DoItShop.MixProject do
   defp deps do
     [
       {:pbkdf2_elixir, "~> 2.0"},
+      # ADDITIONAL PACKAGES
+      {:cachex, "~> 3.6.0"},
+      {:premailex, "~> 0.3.19"},
+      {:oban, "~> 2.16.3"},
+      {:credo, "~> 1.7.1", only: [:dev, :test], runtime: false},
+      {:sobelow, "~> 0.13.0", only: [:dev, :test], runtime: false},
+      {:req, "~> 0.4.5"},
+
+      # DEFAULT PACKAGES
       {:phoenix, "~> 1.7.10"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
@@ -40,7 +49,7 @@ defmodule DoItShop.MixProject do
       {:phoenix_html, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.1"},
-      {:floki, ">= 0.30.0", only: :test},
+      {:floki, ">= 0.30.0"},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
@@ -52,7 +61,7 @@ defmodule DoItShop.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
-      {:tailwind_formatter, "~> 0.4.0", only: [:dev, :test], runtime: false}
+      {:saas_kit, "~> 1.0.4", only: :dev},
     ]
   end
 

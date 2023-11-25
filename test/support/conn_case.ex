@@ -45,7 +45,7 @@ defmodule DoItShopWeb.ConnCase do
   test context.
   """
   def register_and_log_in_user(%{conn: conn}) do
-    user = DoItShop.AccountsFixtures.user_fixture()
+    user = DoItShop.UsersFixtures.user_fixture()
     %{conn: log_in_user(conn, user), user: user}
   end
 
@@ -55,10 +55,22 @@ defmodule DoItShopWeb.ConnCase do
   It returns an updated `conn`.
   """
   def log_in_user(conn, user) do
-    token = DoItShop.Accounts.generate_user_session_token(user)
+    token = DoItShop.Users.generate_user_session_token(user)
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
     |> Plug.Conn.put_session(:user_token, token)
+  end
+  @doc """
+  Switches the admin to use a spefic users account
+
+  It returns an updated `conn`.
+  """
+  def switch_account(%{conn: conn, account: account}) do
+    %{conn: Plug.Conn.put_session(conn, :admin_account_id, account.id)}
+  end
+
+  def switch_account(%{conn: conn, user: user}) do
+    %{conn: Plug.Conn.put_session(conn, :admin_account_id, user.account_id)}
   end
 end

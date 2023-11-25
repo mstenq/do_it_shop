@@ -1,7 +1,7 @@
 defmodule DoItShopWeb.UserSessionController do
   use DoItShopWeb, :controller
 
-  alias DoItShop.Accounts
+  alias DoItShop.Users
   alias DoItShopWeb.UserAuth
 
   def create(conn, %{"_action" => "registered"} = params) do
@@ -21,11 +21,7 @@ defmodule DoItShopWeb.UserSessionController do
   defp create(conn, %{"user" => user_params}, info) do
     %{"email" => email, "password" => password} = user_params
 
-    if user = Accounts.get_user_by_email_and_password(email, password) do
-      if(user) do
-        DoItShop.Repo.put_org_id(user.org_id)
-      end
-
+    if user = Users.get_user_by_email_and_password(email, password) do
       conn
       |> put_flash(:info, info)
       |> UserAuth.log_in_user(user, user_params)

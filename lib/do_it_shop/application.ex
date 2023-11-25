@@ -12,13 +12,15 @@ defmodule DoItShop.Application do
       DoItShop.Repo,
       {DNSCluster, query: Application.get_env(:do_it_shop, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: DoItShop.PubSub},
-      DoItShopWeb.Presence,
       # Start the Finch HTTP client for sending emails
       {Finch, name: DoItShop.Finch},
       # Start a worker by calling: DoItShop.Worker.start_link(arg)
       # {DoItShop.Worker, arg},
       # Start to serve requests, typically the last entry
-      DoItShopWeb.Endpoint
+      DoItShopWeb.Endpoint,
+      {Cachex, name: :general_cache}, # You can add additional caches with different names
+
+      {Oban, oban_config()},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -33,5 +35,9 @@ defmodule DoItShop.Application do
   def config_change(changed, _new, removed) do
     DoItShopWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp oban_config do
+    Application.fetch_env!(:do_it_shop, Oban)
   end
 end

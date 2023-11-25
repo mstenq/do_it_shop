@@ -7,7 +7,7 @@ defmodule DoItShopWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_do_it_shop_key",
-    signing_salt: "tGCryxk8",
+    signing_salt: "+cAxg5Ou",
     same_site: "Lax"
   ]
 

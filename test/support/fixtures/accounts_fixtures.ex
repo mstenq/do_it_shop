@@ -4,28 +4,81 @@ defmodule DoItShop.AccountsFixtures do
   entities via the `DoItShop.Accounts` context.
   """
 
-  def unique_user_email, do: "user#{System.unique_integer()}@example.com"
-  def valid_user_password, do: "hello world!"
+  import DoItShop.UsersFixtures
 
-  def valid_user_attributes(attrs \\ %{}) do
-    Enum.into(attrs, %{
-      email: unique_user_email(),
-      password: valid_user_password()
-    })
+  alias DoItShop.Accounts
+  alias DoItShop.Accounts.Account
+  alias DoItShop.Users.User
+
+  @doc """
+  Generate a account.
+  """
+  def account_fixture(), do: account_fixture(%{})
+  def account_fixture(%User{} = user), do: account_fixture(user, %{})
+
+  def account_fixture(attrs) do
+    user = user_fixture()
+    account_fixture(user, attrs)
   end
 
-  def user_fixture(attrs \\ %{}) do
-    {:ok, user} =
-      attrs
-      |> valid_user_attributes()
-      |> DoItShop.Accounts.register_user()
+  def account_fixture(%User{} = user, attrs) do
+    attrs =
+      Enum.into(attrs, %{
+        name: "some name",
+        personal: false
+      })
 
-    user
+    {:ok, account} = Accounts.create_account(user, attrs)
+
+    Accounts.get_account!(account.id)
   end
 
-  def extract_user_token(fun) do
-    {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
-    [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
-    token
+  @doc """
+  Generate a membership.
+  """
+  def membership_fixture() do
+    account = account_fixture()
+    user = user_fixture()
+    membership_fixture(account, user)
+  end
+
+  def membership_fixture(%Account{} = account) do
+    user = user_fixture()
+    membership_fixture(account, user)
+  end
+
+  def membership_fixture(%Account{} = account, %User{} = user, attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+      })
+
+   {:ok, membership} = Accounts.create_membership(account, user, attrs)
+
+    Accounts.get_membership!(account, membership.id)
+  end
+
+  @doc """
+  Generate a invitation.
+  """
+  def invitation_fixture() do
+    account = account_fixture()
+    user = user_fixture()
+    invitation_fixture(account, user)
+  end
+
+  def invitation_fixture(%Account{} = account) do
+    user = user_fixture()
+    invitation_fixture(account, user)
+  end
+
+  def invitation_fixture(%Account{} = account, %User{} = user, attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+        email: unique_user_email()
+      })
+
+   {:ok, invitation} = Accounts.create_invitation(account, user, attrs)
+
+    Accounts.get_invitation!(account, invitation.id)
   end
 end

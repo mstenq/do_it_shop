@@ -17,10 +17,23 @@ defmodule DoItShopWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # Set the layout for when a user registers or signs in
+  pipeline :bare_layout do
+    plug :put_root_layout, html: {DoItShopWeb.Layouts, :bare}
+  end
+
+  pipeline :app_layout do
+    plug :put_root_layout, html: {DoItShopWeb.Layouts, :application_sidebar}
+  end
+
   scope "/", DoItShopWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
+
+  scope "/", DoItShopWeb do
+    get "/sitemap.xml", SitemapController, :index
   end
 
   # Other scopes may use custom stacks.
@@ -48,7 +61,7 @@ defmodule DoItShopWeb.Router do
   ## Authentication routes
 
   scope "/", DoItShopWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
+    pipe_through [:browser, :redirect_if_user_is_authenticated, :bare_layout]
 
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{DoItShopWeb.UserAuth, :redirect_if_user_is_authenticated}] do
@@ -62,15 +75,14 @@ defmodule DoItShopWeb.Router do
   end
 
   scope "/", DoItShopWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    pipe_through [:browser, :require_authenticated_user, :app_layout]
 
     live_session :require_authenticated_user,
       on_mount: [{DoItShopWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
-
-      live "/employees", EmployeeLive.Index, :index
-      live "/employees/new", EmployeeLive.Index, :new
+      live "/accounts", AccountLive.Index, :index
+      live "/accounts/:account_id/members", MemberLive.Index, :index
     end
   end
 

@@ -1,12 +1,12 @@
 defmodule DoItShopWeb.UserRegistrationLive do
   use DoItShopWeb, :live_view
 
-  alias DoItShop.Accounts
-  alias DoItShop.Accounts.User
+  alias DoItShop.Users
+  alias DoItShop.Users.User
 
   def render(assigns) do
     ~H"""
-    <div class="bg-base-100 mx-auto max-w-sm rounded p-8 shadow">
+    <div class="mx-auto max-w-sm">
       <.header class="text-center">
         Register for an account
         <:subtitle>
@@ -31,9 +31,6 @@ defmodule DoItShopWeb.UserRegistrationLive do
           Oops, something went wrong! Please check the errors below.
         </.error>
 
-        <.input field={@form[:company_name]} label="Company Name" />
-        <.input field={@form[:first_name]} label="First Name" />
-        <.input field={@form[:last_name]} label="Last Name" />
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
 
@@ -46,26 +43,26 @@ defmodule DoItShopWeb.UserRegistrationLive do
   end
 
   def mount(_params, _session, socket) do
-    account_changeset = Accounts.change_user_registration(%User{})
+    changeset = Users.change_user_registration(%User{})
 
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false)
-      |> assign_form(account_changeset)
+      |> assign_form(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do
-    case Accounts.register_user(user_params) do
+    case Users.register_user(user_params) do
       {:ok, user} ->
         {:ok, _} =
-          Accounts.deliver_user_confirmation_instructions(
+          Users.deliver_user_confirmation_instructions(
             user,
             &url(~p"/users/confirm/#{&1}")
           )
 
-        changeset = Accounts.change_user_registration(user)
+        changeset = Users.change_user_registration(user)
         {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -74,7 +71,7 @@ defmodule DoItShopWeb.UserRegistrationLive do
   end
 
   def handle_event("validate", %{"user" => user_params}, socket) do
-    changeset = Accounts.change_user_registration(%User{}, user_params)
+    changeset = Users.change_user_registration(%User{}, user_params)
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 

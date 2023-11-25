@@ -7,9 +7,13 @@
 # General application configuration
 import Config
 
+config :do_it_shop, DoItShop.Repo, migration_primary_key: [name: :id, type: :binary_id]
+
+config :do_it_shop, :env, Mix.env()
+
 config :do_it_shop,
   ecto_repos: [DoItShop.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime, binary_id: true]
 
 # Configures the endpoint
 config :do_it_shop, DoItShopWeb.Endpoint,
@@ -20,7 +24,7 @@ config :do_it_shop, DoItShopWeb.Endpoint,
     layout: false
   ],
   pubsub_server: DoItShop.PubSub,
-  live_view: [signing_salt: "CYNLaCtf"]
+  live_view: [signing_salt: "Kn558ddx"]
 
 # Configures the mailer
 #
@@ -43,7 +47,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.3.5",
+  version: "3.3.2",
   default: [
     args: ~w(
       --config=tailwind.config.js
@@ -60,6 +64,20 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+config :do_it_shop, Oban,
+  repo: DoItShop.Repo,
+  queues: [default: 10, mailers: 20, high: 50, low: 5],
+  plugins: [
+    {Oban.Plugins.Pruner, max_age: 3600 * 24},
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 2 * * *", DoItShop.Workers.ExampleWorker}
+       # {"0 2 * * *", DoItShop.Workers.DailyDigestWorker},
+       # {"@reboot", DoItShop.Workers.StripeSyncWorker},
+       # {"0 2 * * *", DoItShop.DailyReports.DailyReportWorker},
+     ]}
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

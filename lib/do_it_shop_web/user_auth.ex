@@ -1,10 +1,11 @@
 defmodule DoItShopWeb.UserAuth do
+  @moduledoc false
   use DoItShopWeb, :verified_routes
 
   import Plug.Conn
   import Phoenix.Controller
 
-  alias DoItShop.Accounts
+  alias DoItShop.Users
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -26,7 +27,7 @@ defmodule DoItShopWeb.UserAuth do
   if you are not using LiveView.
   """
   def log_in_user(conn, user, params \\ %{}) do
-    token = Accounts.generate_user_session_token(user)
+    token = Users.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
 
     conn
@@ -72,7 +73,7 @@ defmodule DoItShopWeb.UserAuth do
   """
   def log_out_user(conn) do
     user_token = get_session(conn, :user_token)
-    user_token && Accounts.delete_user_session_token(user_token)
+    user_token && Users.delete_user_session_token(user_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       DoItShopWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
@@ -90,8 +91,16 @@ defmodule DoItShopWeb.UserAuth do
   """
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
-    user = user_token && Accounts.get_user_by_session_token(user_token)
-    assign(conn, :current_user, user)
+    user = user_token && Users.get_user_by_session_token(user_token)
+    account =
+      case user do
+        nil -> nil
+        _ -> Users.with_personal_account(user).personal_account
+      end
+
+    conn
+    |> assign(:current_user, user)
+    |> assign(:current_account, account)
   end
 
   defp ensure_user_token(conn) do
@@ -143,12 +152,12 @@ defmodule DoItShopWeb.UserAuth do
         live "/profile", ProfileLive, :index
       end
   """
-  def on_mount(:mount_current_user, _params, session, socket) do
-    {:cont, mount_current_user(socket, session)}
+  def on_mount(:mount_current_user, params, session, socket) do
+    {:cont, mount_current_user(socket, session, params)}
   end
 
-  def on_mount(:ensure_authenticated, _params, session, socket) do
-    socket = mount_current_user(socket, session)
+  def on_mount(:ensure_authenticated, params, session, socket) do
+    socket = mount_current_user(socket, session, params)
 
     if socket.assigns.current_user do
       {:cont, socket}
@@ -162,8 +171,8 @@ defmodule DoItShopWeb.UserAuth do
     end
   end
 
-  def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
-    socket = mount_current_user(socket, session)
+  def on_mount(:redirect_if_user_is_authenticated, params, session, socket) do
+    socket = mount_current_user(socket, session, params)
 
     if socket.assigns.current_user do
       {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
@@ -172,16 +181,26 @@ defmodule DoItShopWeb.UserAuth do
     end
   end
 
-  defp mount_current_user(socket, session) do
-    Phoenix.Component.assign_new(socket, :current_user, fn ->
-      if user_token = session["user_token"] do
-        user = Accounts.get_user_by_session_token(user_token)
+  defp mount_current_user(socket, session, params) do
+    case session do
+      %{"user_token" => user_token} ->
+        assign_new_current_user_and_account(socket, session, params, user_token)
+      %{} ->
+        Phoenix.Component.assign_new(socket, :current_user, fn -> nil end)
+    end
+  end
 
-        if(user) do
-          DoItShop.Repo.put_org_id(user.org_id)
-        end
+  defp assign_new_current_user_and_account(socket, session, params, user_token) do
+    socket =
+      socket
+      |> Phoenix.Component.assign_new(:current_user, fn ->
+        Users.get_user_by_session_token(user_token)
+      end)
 
-        user
+    socket
+    |> Phoenix.Component.assign_new(:current_account, fn ->
+      if user = socket.assigns.current_user do
+        get_current_account(user, params, session)
       end
     end)
   end
@@ -207,7 +226,6 @@ defmodule DoItShopWeb.UserAuth do
   """
   def require_authenticated_user(conn, _opts) do
     if conn.assigns[:current_user] do
-      DoItShop.Repo.put_org_id(conn.assigns[:current_user].org_id)
       conn
     else
       conn
@@ -231,4 +249,26 @@ defmodule DoItShopWeb.UserAuth do
   defp maybe_store_return_to(conn), do: conn
 
   defp signed_in_path(_conn), do: ~p"/"
+
+  # Find the current account in this order
+  # Also make sure to use the accounts where a user is a member
+  # 1. get account_id from params
+  # 2. get admin_account_id from session
+  # 3. get current_account_id from user
+  # 4. Fallback to personal_account
+  defp get_current_account(user, params, session) do
+    user = Users.with_memberships(user)
+    params_account_id = Map.get(params, "account_id")
+    admin_account_id = Map.get(session, "admin_account_id")
+    current_account_id = nil
+
+    [params_account_id, admin_account_id, current_account_id]
+    |> Enum.find(fn account_id ->
+      Enum.find(user.accounts, &(&1.id == account_id))
+    end)
+    |> case do
+      %{} = account -> account
+      _ -> Users.with_personal_account(user).personal_account
+    end
+  end
 end

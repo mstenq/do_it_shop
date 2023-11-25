@@ -6,438 +6,376 @@ defmodule DoItShop.Accounts do
   import Ecto.Query, warn: false
   alias DoItShop.Repo
 
-  alias DoItShop.Accounts.{User, UserToken, UserNotifier}
-  alias DoItShop.Tenants
-
-  def get_topic do
-    inspect(__MODULE__) <> "." <> Integer.to_string(Repo.get_org_id())
-  end
-
-  def subscribe do
-    topic = get_topic()
-    IO.puts("subscribing to #{topic}")
-    Phoenix.PubSub.subscribe(DoItShop.PubSub, topic)
-  end
+  alias DoItShop.Accounts.Account
+  alias DoItShop.Accounts.Membership
+  alias DoItShop.Accounts.Member
+  alias DoItShop.Accounts.Invitation
 
   @doc """
-  tags: [:user_created]
-  todo: need to implement [:user_updated, :user_deleted]
-  """
-  def broadcast({:ok, user}, tag) do
-    IO.puts("broadcasting event #{inspect(tag)}")
-
-    if is_atom(tag) do
-      IO.puts("is atom")
-    end
-
-    Phoenix.PubSub.broadcast(DoItShop.PubSub, get_topic(), {tag, user})
-    {:ok, user}
-  end
-
-  def broadcast(_, _tag) do
-    IO.inspect("error broadcasting user", label: "broadcast error", pretty: true)
-    :error
-  end
-
-  ## Database getters
-
-  @doc """
-  Gets a user by email.
+  Returns the list of accounts.
 
   ## Examples
 
-      iex> get_user_by_email("foo@example.com")
-      %User{}
-
-      iex> get_user_by_email("unknown@example.com")
-      nil
+      iex> list_accounts()
+      [%Account{}, ...]
 
   """
-  def get_user_by_email(email) when is_binary(email) do
-    Repo.get_by(User, email: email)
+  def list_accounts do
+    Repo.all(Account)
   end
 
   @doc """
-  Gets a user by email and password.
+  Gets a single account.
+
+  Raises `Ecto.NoResultsError` if the Account does not exist.
 
   ## Examples
 
-      iex> get_user_by_email_and_password("foo@example.com", "correct_password")
-      %User{}
+      iex> get_account!(123)
+      %Account{}
 
-      iex> get_user_by_email_and_password("foo@example.com", "invalid_password")
-      nil
-
-  """
-  def get_user_by_email_and_password(email, password)
-      when is_binary(email) and is_binary(password) do
-    user = Repo.get_by(User, [email: email], skip_org_id: true)
-
-    if User.valid_password?(user, password), do: user
-  end
-
-  @doc """
-  Gets a single user.
-
-  Raises `Ecto.NoResultsError` if the User does not exist.
-
-  ## Examples
-
-      iex> get_user!(123)
-      %User{}
-
-      iex> get_user!(456)
+      iex> get_account!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id) |> Repo.preload([:role, :org])
-
-  def broadcast_user({:ok, user}, tag) do
-    IO.puts("PREPPING TO BROADCAST USER #{inspect(user)}")
-    test = get_user!(user.id)
-    IO.puts("########################## broadcasting user #{inspect(test)}")
-    broadcast({:ok, get_user!(user.id)}, tag)
-  end
-
-  def broadcast_user(_, _tag) do
-    IO.puts("damn error broadcasting user")
-    :error
-  end
-
-  ## User registration
+  def get_account!(id), do: Repo.get!(Account, id)
 
   @doc """
-  Registers a user.
+  Creates a account.
 
   ## Examples
 
-      iex> register_user(%{field: value})
-      {:ok, %User{}}
+      iex> create_account(%{field: value})
+      {:ok, %Account{}}
 
-      iex> register_user(%{field: bad_value})
+      iex> create_account(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def register_user(attrs) do
-    case Tenants.create_org(attrs) do
-      {:ok, org, admin_role} ->
-        user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => admin_role.id})
-
-        %User{}
-        |> User.registration_changeset(user_attr)
-        |> Repo.insert()
-        |> broadcast_user(:user_created)
-
-      {:error, _} ->
-        {:error, %Ecto.Changeset{}}
-    end
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
-
-  ## Examples
-
-      iex> change_user_registration(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user_registration(%User{} = user, attrs \\ %{}) do
-    User.registration_changeset(user, attrs, hash_password: false, validate_email: false)
-  end
-
-  def add_user_to_org(attrs) do
-    org_id = Repo.get_org_id()
-    temporary_password = "temporary_password"
-
-    user_attrs =
-      Map.merge(attrs, %{
-        "org_id" => org_id,
-        "password" => temporary_password,
-        "company_name" => "I suck at coding"
-      })
-
-    %User{}
-    |> User.registration_changeset(user_attrs)
+  def create_account(user, attrs \\ %{}) do
+    %Account{}
+    |> Account.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:created_by, user)
     |> Repo.insert()
-    |> broadcast_user(:user_created)
-  end
-
-  def change_user_add_to_org(%User{} = user, attrs \\ %{}) do
-    User.add_user_changeset(user, attrs)
-  end
-
-  ## Settings
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for changing the user email.
-
-  ## Examples
-
-      iex> change_user_email(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user_email(user, attrs \\ %{}) do
-    User.email_changeset(user, attrs, validate_email: false)
   end
 
   @doc """
-  Emulates that the email will change without actually changing
-  it in the database.
+  Updates a account.
 
   ## Examples
 
-      iex> apply_user_email(user, "valid password", %{email: ...})
-      {:ok, %User{}}
+      iex> update_account(account, %{field: new_value})
+      {:ok, %Account{}}
 
-      iex> apply_user_email(user, "invalid password", %{email: ...})
+      iex> update_account(account, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def apply_user_email(user, password, attrs) do
-    user
-    |> User.email_changeset(attrs)
-    |> User.validate_current_password(password)
-    |> Ecto.Changeset.apply_action(:update)
+  def update_account(%Account{} = account, attrs) do
+    account
+    |> Account.changeset(attrs)
+    |> Repo.update()
   end
 
   @doc """
-  Updates the user email using the given token.
-
-  If the token matches, the user email is updated and the token is deleted.
-  The confirmed_at date is also updated to the current time.
-  """
-  def update_user_email(user, token) do
-    context = "change:#{user.email}"
-
-    with {:ok, query} <- UserToken.verify_change_email_token_query(token, context),
-         %UserToken{sent_to: email} <- Repo.one(query, skip_org_id: true),
-         {:ok, _} <- Repo.transaction(user_email_multi(user, email, context)) do
-      :ok
-    else
-      _ -> :error
-    end
-  end
-
-  defp user_email_multi(user, email, context) do
-    changeset =
-      user
-      |> User.email_changeset(%{email: email})
-      |> User.confirm_changeset()
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, changeset)
-    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, [context]))
-  end
-
-  @doc ~S"""
-  Delivers the update email instructions to the given user.
+  Deletes a account.
 
   ## Examples
 
-      iex> deliver_user_update_email_instructions(user, current_email, &url(~p"/users/settings/confirm_email/#{&1})")
-      {:ok, %{to: ..., body: ...}}
+      iex> delete_account(account)
+      {:ok, %Account{}}
 
-  """
-  def deliver_user_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
-      when is_function(update_email_url_fun, 1) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
-
-    Repo.insert!(user_token)
-    UserNotifier.deliver_update_email_instructions(user, update_email_url_fun.(encoded_token))
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for changing the user password.
-
-  ## Examples
-
-      iex> change_user_password(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user_password(user, attrs \\ %{}) do
-    User.password_changeset(user, attrs, hash_password: false)
-  end
-
-  @doc """
-  Updates the user password.
-
-  ## Examples
-
-      iex> update_user_password(user, "valid password", %{password: ...})
-      {:ok, %User{}}
-
-      iex> update_user_password(user, "invalid password", %{password: ...})
+      iex> delete_account(account)
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_user_password(user, password, attrs) do
-    changeset =
-      user
-      |> User.password_changeset(attrs)
-      |> User.validate_current_password(password)
+  def delete_account(%Account{} = account) do
+    Repo.delete(account)
+  end
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, changeset)
-    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all),
-      skip_org_id: true
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking account changes.
+
+  ## Examples
+
+      iex> change_account(account)
+      %Ecto.Changeset{data: %Account{}}
+
+  """
+  def change_account(%Account{} = account, attrs \\ %{}) do
+    Account.changeset(account, attrs)
+  end
+
+  @doc """
+  Returns members associations for an account.
+
+  ## Examples
+
+      iex> with_members(account)
+      %Account{members: [...]}
+
+  """
+  def with_members(account_or_accounts) do
+    account_or_accounts
+    |> Repo.preload(:members, skip_account_id: true)
+  end
+
+  @doc """
+  Returns true if a user has access to an account.
+
+  ## Examples
+
+      iex> can_be_accessed_by_a_user?(account, user)
+      true
+
+  """
+  def can_be_accessed_by_a_user?(account, user) do
+    account
+    |> with_members()
+    |> Map.get(:members, [])
+    |> Enum.map(& &1.id)
+    |> Enum.member?(user.id)
+  end
+
+  @doc """
+  Returns the list of memberships.
+
+  ## Examples
+
+      iex> list_memberships()
+      [%Membership{}, ...]
+
+  """
+  def list_memberships(account) do
+    (
+      from m in Membership,
+      join: mm in assoc(m, :member)
     )
-    |> Repo.transaction()
-    |> case do
-      {:ok, %{user: user}} -> {:ok, user}
-      {:error, :user, changeset, _} -> {:error, changeset}
-    end
-  end
-
-  ## Session
-
-  @doc """
-  Generates a session token.
-  """
-  def generate_user_session_token(user) do
-    {token, user_token} = UserToken.build_session_token(user)
-    Repo.insert!(user_token)
-    token
+    |> Repo.all(account_id: account.id)
   end
 
   @doc """
-  Gets the user with the given signed token.
-  """
-  def get_user_by_session_token(token) do
-    {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query, skip_org_id: true)
-  end
+  Gets a single membership.
 
-  @doc """
-  Deletes the signed token with the given context.
-  """
-  def delete_user_session_token(token) do
-    Repo.delete_all(UserToken.by_token_and_context_query(token, "session"), skip_org_id: true)
-    :ok
-  end
-
-  ## Confirmation
-
-  @doc ~S"""
-  Delivers the confirmation email instructions to the given user.
+  Raises `Ecto.NoResultsError` if the Membership does not exist.
 
   ## Examples
 
-      iex> deliver_user_confirmation_instructions(user, &url(~p"/users/confirm/#{&1}"))
-      {:ok, %{to: ..., body: ...}}
+      iex> get_membership!(123)
+      %Membership{}
 
-      iex> deliver_user_confirmation_instructions(confirmed_user, &url(~p"/users/confirm/#{&1}"))
-      {:error, :already_confirmed}
+      iex> get_membership!(456)
+      ** (Ecto.NoResultsError)
 
   """
-  def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
-      when is_function(confirmation_url_fun, 1) do
-    if user.confirmed_at do
-      {:error, :already_confirmed}
-    else
-      {encoded_token, user_token} = UserToken.build_email_token(user, "confirm")
-      Repo.insert!(user_token, repo_opts: [skip_org_id: true])
-      UserNotifier.deliver_confirmation_instructions(user, confirmation_url_fun.(encoded_token))
-    end
-  end
-
-  def deliver_user_new_account_instructions(%User{} = user, reset_url_fun) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
-    Repo.insert!(user_token, repo_opts: [skip_org_id: true])
-    UserNotifier.deliver_new_account_instructions(user, reset_url_fun.(encoded_token))
-  end
+  def get_membership!(account, id), do: Repo.get!(Membership, id, account_id: account.id)
 
   @doc """
-  Confirms a user by the given token.
-
-  If the token matches, the user account is marked as confirmed
-  and the token is deleted.
-  """
-  def confirm_user(token) do
-    with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
-         %User{} = user <- Repo.one(query),
-         {:ok, %{user: user}} <- Repo.transaction(confirm_user_multi(user)) do
-      {:ok, user}
-    else
-      _ -> :error
-    end
-  end
-
-  defp confirm_user_multi(user) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
-    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, ["confirm"]))
-  end
-
-  ## Reset password
-
-  @doc ~S"""
-  Delivers the reset password email to the given user.
+  Creates a membership.
 
   ## Examples
 
-      iex> deliver_user_reset_password_instructions(user, &url(~p"/users/reset_password/#{&1}"))
-      {:ok, %{to: ..., body: ...}}
+      iex> create_membership(%{field: value})
+      {:ok, %Membership{}}
 
-  """
-  def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
-      when is_function(reset_password_url_fun, 1) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
-    Repo.insert!(user_token)
-    UserNotifier.deliver_reset_password_instructions(user, reset_password_url_fun.(encoded_token))
-  end
-
-  @doc """
-  Gets the user by reset password token.
-
-  ## Examples
-
-      iex> get_user_by_reset_password_token("validtoken")
-      %User{}
-
-      iex> get_user_by_reset_password_token("invalidtoken")
-      nil
-
-  """
-  def get_user_by_reset_password_token(token) do
-    with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
-         %User{} = user <- Repo.one(query, skip_org_id: true) do
-      user
-    else
-      _ -> nil
-    end
-  end
-
-  @doc """
-  Resets the user password.
-
-  ## Examples
-
-      iex> reset_user_password(user, %{password: "new long password", password_confirmation: "new long password"})
-      {:ok, %User{}}
-
-      iex> reset_user_password(user, %{password: "valid", password_confirmation: "not the same"})
+      iex> create_membership(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def reset_user_password(user, attrs) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, User.password_changeset(user, attrs), skip_org_id: true)
-    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all),
-      skip_org_id: true
-    )
-    |> Repo.transaction()
-    |> case do
-      {:ok, %{user: user}} -> {:ok, user}
-      {:error, :user, changeset, _} -> {:error, changeset}
-    end
+  def create_membership(account, user, attrs \\ %{}) do
+    # Transform the user to a member
+    member = Repo.get!(Member, user.id)
+
+    %Membership{}
+    |> Membership.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:account, account)
+    |> Ecto.Changeset.put_assoc(:member, member)
+    |> Repo.insert()
   end
 
-  def list_users do
-    User
-    |> Repo.all()
-    |> Repo.preload(:role)
+  @doc """
+  Updates a membership.
+
+  ## Examples
+
+      iex> update_membership(membership, %{field: new_value})
+      {:ok, %Membership{}}
+
+      iex> update_membership(membership, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_membership(%Membership{} = membership, attrs) do
+    membership
+    |> Membership.changeset(attrs)
+    |> Repo.update()
   end
+
+  @doc """
+  Deletes a membership.
+
+  ## Examples
+
+      iex> delete_membership(membership)
+      {:ok, %Membership{}}
+
+      iex> delete_membership(membership)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_membership(%Membership{} = membership) do
+    Repo.delete(membership)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking membership changes.
+
+  ## Examples
+
+      iex> change_membership(membership)
+      %Ecto.Changeset{data: %Membership{}}
+
+  """
+  def change_membership(%Membership{} = membership, attrs \\ %{}) do
+    Membership.changeset(membership, attrs)
+  end
+
+  @doc """
+  Returns the list of invitations.
+
+  ## Examples
+
+      iex> list_invitations(account)
+      [%Invitation{}, ...]
+
+  """
+  def list_invitations(account) do
+    (
+      from m in Invitation,
+      order_by: [:inserted_at]
+    )
+    |> Repo.all(account_id: account.id)
+  end
+
+  @doc """
+  Returns the list of invitations for a user.
+
+  ## Examples
+
+      iex> list_invitations_for_user(account)
+      [%Invitation{}, ...]
+
+  """
+  def list_invitations_for_user(user) do
+    (
+      from i in Invitation,
+      where: i.email == ^user.email,
+      where: is_nil(i.accepted_at),
+      order_by: [:inserted_at],
+      preload: [:account, :invited_by]
+    )
+    |> Repo.all(skip_account_id: true)
+  end
+
+  @doc """
+  Gets a single invitation.
+
+  Raises `Ecto.NoResultsError` if the Invitation does not exist.
+
+  ## Examples
+
+      iex> get_invitation!(account, 123)
+      %Invitation{}
+
+      iex> get_invitation!(account, 456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_invitation!(account, id), do: Repo.get!(Invitation, id, account_id: account.id)
+
+  @doc """
+  Creates a invitation.
+
+  ## Examples
+
+      iex> create_invitation(%{field: value})
+      {:ok, %Invitation{}}
+
+      iex> create_invitation(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_invitation(account, user, attrs \\ %{}) do
+    %Invitation{}
+    |> Invitation.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:account, account)
+    |> Ecto.Changeset.put_assoc(:invited_by, user)
+    |> Repo.insert()
+    |> invite_member()
+  end
+
+  @doc """
+  Updates a invitation.
+
+  ## Examples
+
+      iex> update_invitation(invitation, %{field: new_value})
+      {:ok, %Invitation{}}
+
+      iex> update_invitation(invitation, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_invitation(%Invitation{} = invitation, attrs) do
+    invitation
+    |> Invitation.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a invitation.
+
+  ## Examples
+
+      iex> delete_invitation(invitation)
+      {:ok, %Invitation{}}
+
+      iex> delete_invitation(invitation)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_invitation(%Invitation{} = invitation) do
+    Repo.delete(invitation)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking invitation changes.
+
+  ## Examples
+
+      iex> change_invitation(invitation)
+      %Ecto.Changeset{data: %Invitation{}}
+
+  """
+  def change_invitation(%Invitation{} = invitation, attrs \\ %{}) do
+    Invitation.changeset(invitation, attrs)
+  end
+
+  use Phoenix.VerifiedRoutes, endpoint: DoItShopWeb.Endpoint, router: DoItShopWeb.Router
+  alias DoItShop.Mailer
+  alias DoItShop.Accounts.InvitationNotifier
+
+  @doc """
+  Sends an email to the invited user with invitation instructions.
+  After the user is created and/or signed in, the user will be prompted to me a member of the team.
+  """
+  def invite_member({:ok, %{email: email} = _invitation} = result) do
+    url = url(~p"/users/log_in")
+
+    InvitationNotifier.invite_user_email(%{email: email, url: url})
+    |> Mailer.deliver()
+
+    result
+  end
+  def invite_member(result), do: result
 end

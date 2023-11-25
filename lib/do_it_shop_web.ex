@@ -39,7 +39,7 @@ defmodule DoItShopWeb do
   def controller do
     quote do
       use Phoenix.Controller,
-        formats: [:html, :json],
+        formats: [:html, :json, :xml],
         layouts: [html: DoItShopWeb.Layouts]
 
       import Plug.Conn
@@ -85,7 +85,7 @@ defmodule DoItShopWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import DoItShopWeb.CoreComponents
-      import DoItShopWeb.CustomComponents
+      use DoItShopWeb.ComponentLibrary
       import DoItShopWeb.Gettext
 
       # Shortcut for generating JS commands

@@ -39,8 +39,8 @@ defmodule DoItShopWeb.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
-  attr :max_width, :string, default: "max-w-3xl"
   slot :inner_block, required: true
+  slot :title
 
   def modal(assigns) do
     ~H"""
@@ -53,7 +53,7 @@ defmodule DoItShopWeb.CoreComponents do
     >
       <div
         id={"#{@id}-bg"}
-        class="bg-base-200/90 fixed inset-0 transition-opacity"
+        class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-50 dark:bg-opacity-80"
         aria-hidden="true"
       />
       <div
@@ -64,26 +64,39 @@ defmodule DoItShopWeb.CoreComponents do
         aria-modal="true"
         tabindex="0"
       >
-        <div class="flex min-h-full items-center justify-center">
-          <div class={["w-full p-4 sm:p-6 lg:py-8", @max_width]}>
+        <div class="flex items-center justify-center min-h-full">
+          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
             <.focus_wrap
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="relative hidden transition shadow-lg bg-base-100 shadow-zinc-700/10 ring-zinc-700/10 rounded-2xl p-14 ring-1"
+              class="relative bg-white rounded-lg shadow dark:bg-gray-700"
             >
-              <div class="absolute top-6 right-5">
+              <div class="absolute top-4 right-4">
                 <button
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
                   aria-label={gettext("close")}
                 >
                   <.icon name="hero-x-mark-solid" class="w-5 h-5" />
                 </button>
               </div>
-              <div id={"#{@id}-content"}>
+              <header :if={@title != []} class="p-4 border-b rounded-t dark:border-gray-600">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                  <%= render_slot(@title) %>
+                </h3>
+                <p
+                  :if={@subtitle != []}
+                  id={"#{@id}-description"}
+                  class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400"
+                >
+                  <%= render_slot(@subtitle) %>
+                </p>
+              </header>
+
+              <div id={"#{@id}-content"} class="p-6 space-y-6">
                 <%= render_slot(@inner_block) %>
               </div>
             </.focus_wrap>
@@ -120,19 +133,20 @@ defmodule DoItShopWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
-        "fixed top-2 right-2 z-50 mr-2 w-80 rounded-lg p-3 ring-1 sm:w-96",
-        @kind == :info && "bg-emerald-50 fill-cyan-900 text-emerald-800 ring-emerald-500",
-        @kind == :error && "bg-rose-50 fill-rose-900 text-rose-900 shadow-md ring-rose-500"
+        "fixed hidden top-2 right-2 w-80 sm:w-96 z-50 rounded-lg p-4 shadow-md",
+        @kind == :info && "text-blue-800 bg-blue-50 dark:bg-gray-800 dark:text-blue-400",
+        @kind == :error && "text-red-800 bg-red-50 dark:bg-gray-800 dark:text-red-400",
+        @id == "client-error" && "transition delay-300"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
+      <p :if={@title} class="flex items-center text-sm gap-1.5 font-semibold leading-6">
         <.icon :if={@kind == :info} name="hero-information-circle-mini" class="w-4 h-4" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="w-4 h-4" />
         <%= @title %>
       </p>
       <p class="mt-2 text-sm leading-5"><%= msg %></p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
+      <button type="button" class="absolute p-2 group top-1 right-1" aria-label={gettext("close")}>
         <.icon name="hero-x-mark-solid" class="w-5 h-5 opacity-40 group-hover:opacity-70" />
       </button>
     </div>
@@ -206,9 +220,9 @@ defmodule DoItShopWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="">
+      <div class="space-y-8">
         <%= render_slot(@inner_block, f) %>
-        <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
+        <div :for={action <- @actions} class="flex items-center justify-between gap-6 mt-2">
           <%= render_slot(action, f) %>
         </div>
       </div>
@@ -224,6 +238,10 @@ defmodule DoItShopWeb.CoreComponents do
       <.button>Send!</.button>
       <.button phx-click="go" class="ml-2">Send!</.button>
   """
+  attr :kind, :atom,
+    values: [:primary, :secondary, :dark, :light, :link, :success, :danger],
+    default: :primary
+
   attr :type, :string, default: nil
   attr :class, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
@@ -232,7 +250,29 @@ defmodule DoItShopWeb.CoreComponents do
 
   def button(assigns) do
     ~H"""
-    <button type={@type} class={["btn phx-submit-loading:opacity-75", "", @class]} {@rest}>
+    <button
+      type={@type}
+      class={[
+        "font-medium rounded-lg text-sm px-5 py-2.5 focus:ring-4 inline-flex items-center gap-2 focus:outline-none phx-submit-loading:opacity-75",
+        @kind == :primary &&
+          "text-white bg-blue-700 hover:bg-blue-800 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800",
+        @kind == :secondary &&
+          "text-gray-900 bg-white border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700",
+        @kind == :dark &&
+          "text-white bg-gray-800 hover:bg-gray-900 focus:ring-4 focus:ring-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700",
+        @kind == :light &&
+          "text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700",
+        @kind == :link &&
+          "border border-transparent text-blue-600 dark:text-blue-500 hover:underline",
+        @kind == :success &&
+          "text-white bg-green-700 hover:bg-green-800 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800",
+        @kind == :danger &&
+          "text-white bg-red-700 hover:bg-red-800 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900",
+        Map.get(@rest, :disabled) && "cursor-not-allowed bg-opacity-75 text-opacity-75",
+        @class
+      ]}
+      {@rest}
+    >
       <%= render_slot(@inner_block) %>
     </button>
     """
@@ -305,15 +345,15 @@ defmodule DoItShopWeb.CoreComponents do
 
     ~H"""
     <div phx-feedback-for={@name}>
-      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+      <label class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-300">
         <input type="hidden" name={@name} value="false" />
         <input
           type="checkbox"
-          id={@id}
+          id={@id || @name}
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
           {@rest}
         />
         <%= @label %>
@@ -325,12 +365,17 @@ defmodule DoItShopWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+    <div phx-feedback-for={@name} class="space-y-1">
+      <.label :if={@label} for={@id}><%= @label %></.label>
       <select
         id={@id}
         name={@name}
-        class="select select-bordered w-full max-w-sm"
+        class={[
+          "block w-full p-2.5 bg-gray-50 text-gray-900 text-sm rounded-lg border border-gray-300",
+          "focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500",
+          "dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400",
+          "dark:focus:ring-blue-500/5 dark:focus:border-blue-500"
+        ]}
         multiple={@multiple}
         {@rest}
       >
@@ -344,16 +389,19 @@ defmodule DoItShopWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+    <div phx-feedback-for={@name} class="space-y-2">
+      <.label :if={@label} for={@id}><%= @label %></.label>
       <textarea
-        id={@id}
+        id={@id || @name}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "min-h-[6rem] phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "block w-full p-2.5 min-h-[6rem] bg-gray-50 text-sm rounded-lg border border-gray-300 text-gray-900",
+          "focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500",
+          "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500/5 dark:focus:border-blue-500",
+          "phx-no-feedback:border-gray-300 phx-no-feedback:focus:border-blue-500 phx-no-feedback:focus:ring-blue-500/5",
+          "phx-no-feedback:dark:border-gray-600 phx-no-feedback:dark:focus:border-blue-500 phx-no-feedback:dark:focus:ring-blue-500/5",
+          @errors != [] &&
+            "text-red-900 placeholder-red-700 border-red-500 focus:ring-red-500 focus:border-red-500 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
@@ -362,44 +410,24 @@ defmodule DoItShopWeb.CoreComponents do
     """
   end
 
-  def input(%{type: "search"} = assigns) do
-    ~H"""
-    <div class="join" phx-feedback-for={@name}>
-      <button class="btn join-item"><.icon name="hero-magnifying-glass" /></button>
-      <input
-        type={@type}
-        name={@name}
-        id={@id}
-        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[
-          "join-item input w-full max-w-sm ",
-          @errors == [] && "border-gray-300 focus:border-zinc-400 dark:border-gray-600",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
-        ]}
-        {@rest}
-      />
-    </div>
-    """
-  end
-
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+    <div phx-feedback-for={@name} class="space-y-2">
+      <.label :if={@label} for={@id}><%= @label %></.label>
       <input
         type={@type}
         name={@name}
-        id={@id}
+        id={@id || @name}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "input w-full max-w-sm",
-          @errors == [] &&
-            "border-gray-300 focus:border-gray-300 dark:border-gray-700 dark:focus:border-gray-600",
-          @errors != [] && "border-rose-600 focus:border-rose-600 focus:ring-rose-600",
-          "dark:border-rose-800 dark:focus:border-rose-800 dark:focus:ring-rose-800",
-          "phx-no-feedback:border-gray-300 phx-no-feedback:focus:ring-gray-300",
-          "dark:phx-no-feedback:border-gray-600 dark:phx-no-feedback:focus:ring-gray-600"
+          "block w-full p-2.5 bg-gray-50 text-sm rounded-lg border border-gray-300 text-gray-900",
+          "focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500",
+          "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500/5 dark:focus:border-blue-500",
+          "phx-no-feedback:border-gray-300 phx-no-feedback:focus:border-blue-500 phx-no-feedback:focus:ring-blue-500/5",
+          "phx-no-feedback:dark:border-gray-600 phx-no-feedback:dark:focus:border-blue-500 phx-no-feedback:dark:focus:ring-blue-500/5",
+          @errors != [] &&
+            "text-red-900 placeholder-red-700 border-red-500 focus:ring-red-500 focus:border-red-500 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
         ]}
         {@rest}
       />
@@ -416,8 +444,8 @@ defmodule DoItShopWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="label">
-      <span class="label-text"><%= render_slot(@inner_block) %></span>
+    <label for={@for} class="block text-sm font-medium text-gray-900 dark:text-white">
+      <%= render_slot(@inner_block) %>
     </label>
     """
   end
@@ -429,8 +457,8 @@ defmodule DoItShopWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden dark:opacity-80">
-      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none dark:opacity-80" />
+    <p class="flex gap-3 mt-3 text-sm text-red-600 phx-no-feedback:hidden dark:text-red-500">
+      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 w-5 h-5 flex-none" />
       <%= render_slot(@inner_block) %>
     </p>
     """
@@ -447,16 +475,16 @@ defmodule DoItShopWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "mb-12", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+        <h1 class="text-lg font-semibold leading-8 text-gray-900 dark:text-white">
           <%= render_slot(@inner_block) %>
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
           <%= render_slot(@subtitle) %>
         </p>
       </div>
-      <div class="flex-none"><%= render_slot(@actions) %></div>
+      <div class="flex-none space-x-4"><%= render_slot(@actions) %></div>
     </header>
     """
   end
@@ -493,32 +521,37 @@ defmodule DoItShopWeb.CoreComponents do
       end
 
     ~H"""
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead class="">
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
           <tr>
-            <th :for={col <- @col} class=""><%= col[:label] %></th>
-            <th :if={@action != []} class="">
-              <span class="sr-only"><%= gettext("Actions") %></span>
-            </th>
+            <th :for={col <- @col} class="px-6 py-3"><%= col[:label] %></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%= gettext("Actions") %></span></th>
           </tr>
         </thead>
-        <tbody
-          id={@id}
-          phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
-          class=""
-        >
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class={[@row_click && "hover"]}>
+        <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}>
+          <tr
+            :for={row <- @rows}
+            id={@row_id && @row_id.(row)}
+            class="bg-white border-b last:border-b-0 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+          >
             <td
-              :for={col <- @col}
+              :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
-              class={["whitespace-nowrap", @row_click && "hover:cursor-pointer"]}
+              class={[
+                "px-6 py-4",
+                i == 0 && "text-gray-900 whitespace-nowrap dark:text-white",
+                @row_click && "hover:cursor-pointer"
+              ]}
             >
               <%= render_slot(col, @row_item.(row)) %>
             </td>
-            <td :if={@action != []} class="">
-              <div class="flex items-center justify-end gap-4 font-semibold">
-                <span :for={action <- @action} class="">
+            <td :if={@action != []} class="px-6 py-4 w-14">
+              <div class="relative py-4 space-x-2 text-sm font-medium text-right whitespace-nowrap">
+                <span
+                  :for={action <- @action}
+                  class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                >
                   <%= render_slot(action, @row_item.(row)) %>
                 </span>
               </div>
@@ -546,14 +579,14 @@ defmodule DoItShopWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <div class="mt-14">
-      <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt class="w-1/4 flex-none text-zinc-500"><%= item.title %></dt>
-          <dd class="text-zinc-700"><%= render_slot(item) %></dd>
-        </div>
-      </dl>
-    </div>
+    <dl class="-my-4 divide-y divide-gray-200 dark:divide-gray-700">
+      <div :for={item <- @item} class="flex gap-4 py-4 sm:gap-8">
+        <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-gray-500 dark:text-gray-400">
+          <%= item.title %>
+        </dt>
+        <dd class="text-sm leading-6 text-gray-900 dark:text-white"><%= render_slot(item) %></dd>
+      </div>
+    </dl>
     """
   end
 
@@ -569,12 +602,12 @@ defmodule DoItShopWeb.CoreComponents do
 
   def back(assigns) do
     ~H"""
-    <div class="mt-16">
+    <div class="mt-12">
       <.link
         navigate={@navigate}
-        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+        class="flex items-center gap-2 mr-8 text-sm text-gray-500 transition-colors duration-200 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       >
-        <.icon name="hero-arrow-left-solid" class="w-3 h-3" />
+        <.icon name="hero-arrow-left-solid" class="w-4 h-4" />
         <%= render_slot(@inner_block) %>
       </.link>
     </div>
@@ -615,8 +648,7 @@ defmodule DoItShopWeb.CoreComponents do
       to: selector,
       transition:
         {"transition-all transform ease-out duration-300",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
-         "opacity-100 translate-y-0 sm:scale-100"}
+         "opacity-0 translate-y-4 sm:-translate-y-12", "opacity-100 translate-y-0"}
     )
   end
 
@@ -625,9 +657,8 @@ defmodule DoItShopWeb.CoreComponents do
       to: selector,
       time: 200,
       transition:
-        {"transition-all transform ease-in duration-200",
-         "opacity-100 translate-y-0 sm:scale-100",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+        {"transition-all transform ease-in duration-200", "opacity-100 translate-y-0 sm:mt-0",
+         "opacity-0 translate-y-4 sm:-translate-y-36"}
     )
   end
 

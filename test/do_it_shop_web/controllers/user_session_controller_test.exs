@@ -1,7 +1,7 @@
 defmodule DoItShopWeb.UserSessionControllerTest do
   use DoItShopWeb.ConnCase, async: true
 
-  import DoItShop.AccountsFixtures
+  import DoItShop.UsersFixtures
 
   setup do
     %{user: user_fixture()}

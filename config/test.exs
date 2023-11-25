@@ -3,6 +3,8 @@ import Config
 # Only in tests, remove the complexity from the password hashing algorithm
 config :pbkdf2_elixir, :rounds, 1
 
+config :do_it_shop, Oban, testing: :manual
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
@@ -20,7 +22,7 @@ config :do_it_shop, DoItShop.Repo,
 # you can enable the server option below.
 config :do_it_shop, DoItShopWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "ce/WStNFXIULSyB5cSs5kfNq5j6V+5ddO0iobEm0MycQtA2Kikw63jcD+b/nmUPH",
+  secret_key_base: "5GbQfW8/x3btLBtj3G7Vg9ZcZqNFLkm7RYF3w+kHBSdhgJN8QnCQMPJycnxsz9ih",
   server: false
 
 # In test we don't send emails.

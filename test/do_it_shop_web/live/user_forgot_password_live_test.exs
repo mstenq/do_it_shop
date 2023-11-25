@@ -2,9 +2,9 @@ defmodule DoItShopWeb.UserForgotPasswordLiveTest do
   use DoItShopWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import DoItShop.AccountsFixtures
+  import DoItShop.UsersFixtures
 
-  alias DoItShop.Accounts
+  alias DoItShop.Users
   alias DoItShop.Repo
 
   describe "Forgot password page" do
@@ -43,7 +43,7 @@ defmodule DoItShopWeb.UserForgotPasswordLiveTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "If your email is in our system"
 
-      assert Repo.get_by!(Accounts.UserToken, user_id: user.id).context ==
+      assert Repo.get_by!(Users.UserToken, user_id: user.id).context ==
                "reset_password"
     end
 
@@ -57,7 +57,7 @@ defmodule DoItShopWeb.UserForgotPasswordLiveTest do
         |> follow_redirect(conn, "/")
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "If your email is in our system"
-      assert Repo.all(Accounts.UserToken) == []
+      assert Repo.all(Users.UserToken) == []
     end
   end
 end
