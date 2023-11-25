@@ -10,11 +10,13 @@ defmodule DoItShop.Accounts do
   alias DoItShop.Tenants
 
   def get_topic do
-    "Accounts" <> Integer.to_string(Repo.get_org_id())
+    inspect(__MODULE__) <> "." <> Integer.to_string(Repo.get_org_id())
   end
 
   def subscribe do
-    Phoenix.PubSub.subscribe(DoItShop.PubSub, get_topic())
+    topic = get_topic()
+    IO.puts("subscribing to #{topic}")
+    Phoenix.PubSub.subscribe(DoItShop.PubSub, topic)
   end
 
   @doc """
@@ -22,7 +24,14 @@ defmodule DoItShop.Accounts do
   todo: need to implement [:user_updated, :user_deleted]
   """
   def broadcast({:ok, user}, tag) do
+    IO.puts("broadcasting event #{inspect(tag)}")
+
+    if is_atom(tag) do
+      IO.puts("is atom")
+    end
+
     Phoenix.PubSub.broadcast(DoItShop.PubSub, get_topic(), {tag, user})
+    {:ok, user}
   end
 
   def broadcast(_, _tag) do
@@ -84,12 +93,16 @@ defmodule DoItShop.Accounts do
   def get_user!(id), do: Repo.get!(User, id) |> Repo.preload([:role, :org])
 
   def broadcast_user({:ok, user}, tag) do
-    IO.puts("broadcasting user")
-    IO.inspect(get_user!(user.id), label: "get_user!", pretty: true)
-    # broadcast(, tag)
+    IO.puts("PREPPING TO BROADCAST USER #{inspect(user)}")
+    test = get_user!(user.id)
+    IO.puts("########################## broadcasting user #{inspect(test)}")
+    broadcast({:ok, get_user!(user.id)}, tag)
   end
 
-  def broadcast_user({:error, _}, _tag), do: :error
+  def broadcast_user(_, _tag) do
+    IO.puts("damn error broadcasting user")
+    :error
+  end
 
   ## User registration
 
@@ -113,8 +126,7 @@ defmodule DoItShop.Accounts do
         %User{}
         |> User.registration_changeset(user_attr)
         |> Repo.insert()
-
-      # |> broadcast_user(:user_created)
+        |> broadcast_user(:user_created)
 
       {:error, _} ->
         {:error, %Ecto.Changeset{}}
@@ -148,8 +160,7 @@ defmodule DoItShop.Accounts do
     %User{}
     |> User.registration_changeset(user_attrs)
     |> Repo.insert()
-
-    # |> broadcast_user(:user_created)
+    |> broadcast_user(:user_created)
   end
 
   def change_user_add_to_org(%User{} = user, attrs \\ %{}) do

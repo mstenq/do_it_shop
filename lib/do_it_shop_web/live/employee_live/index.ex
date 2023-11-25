@@ -8,7 +8,7 @@ defmodule DoItShopWeb.EmployeeLive.Index do
 
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      # Accounts.subscribe()
+      Accounts.subscribe()
     end
 
     {:ok, stream(socket, :employees, Accounts.list_users())}
@@ -126,5 +126,10 @@ defmodule DoItShopWeb.EmployeeLive.Index do
 
   def handle_info({:user_created, user}, socket) do
     {:noreply, stream_insert(socket, :employees, user)}
+  end
+
+  def handle_info(message, socket) do
+    IO.warn("UNHANDLED MESSAGE: #{inspect(message)}")
+    {:noreply, socket}
   end
 end
