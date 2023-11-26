@@ -70,4 +70,8 @@ defmodule DoItShop.Utils.Sort do
       %{sort_by: sort_key, sort_order: :asc}
     end
   end
+
+  def next_sort(sort_key, _) do
+    %{sort_by: sort_key, sort_order: :asc}
+  end
 end

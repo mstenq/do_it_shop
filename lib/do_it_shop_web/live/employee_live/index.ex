@@ -21,6 +21,7 @@ defmodule DoItShopWeb.EmployeeLive.Index do
       |> stream(:employees, Accounts.list_users(params), reset: true)
       |> assign(socket.assigns.live_action, params)
       |> assign(sort_options: params)
+      |> apply_action(socket.assigns.live_action, params)
 
     {:noreply, socket}
   end
@@ -112,11 +113,6 @@ defmodule DoItShopWeb.EmployeeLive.Index do
   def assign_form(socket, %Ecto.Changeset{} = changeset) do
     socket
     |> assign(:form, to_form(changeset))
-  end
-
-  def handle_event("sort", %{"sort-by" => sort_by} = params, socket) do
-    IO.inspect(socket.assigns, label: "NEW SORT")
-    {:noreply, socket}
   end
 
   def handle_event("validate", %{"user" => user_params}, socket) do
