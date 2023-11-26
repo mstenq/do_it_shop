@@ -1,4 +1,5 @@
 defmodule DoItShopWeb.EmployeeLive.Index do
+  alias DoItShop.Utils.Sort
   use DoItShopWeb, :live_view
 
   alias Phoenix.LiveView.JS
@@ -55,20 +56,20 @@ defmodule DoItShopWeb.EmployeeLive.Index do
       </div>
       
       <.table id="users_table" rows={@streams.employees}>
-        <:col :let={{_, employee}} label="Name" click={sort_by(:first_name, @sort_options)}>
+        <:col :let={{_, employee}} label="Name" sort={Sort.next_sort("first_name", @sort_options)}>
           <%= String.capitalize(employee.first_name) <> " " <> String.capitalize(employee.last_name) %>
         </:col>
         
-        <:col :let={{_, employee}} label="Email" click={sort_by(:email, @sort_options)}>
+        <:col :let={{_, employee}} label="Email" sort={Sort.next_sort("email", @sort_options)}>
           <%= employee.email %>
         </:col>
         
-        <:col :let={{_, employee}} label="Role" click={sort_by(:role, @sort_options)}>
+        <:col :let={{_, employee}} label="Role" sort={Sort.next_sort("role", @sort_options)}>
           <%= String.capitalize(employee.role.role) %>
         </:col>
       </.table>
     </div>
-     <pre><%= inspect(@sort_options, prett: true) %></pre>
+
     <.modal
       :if={@live_action == :new}
       show
@@ -111,6 +112,11 @@ defmodule DoItShopWeb.EmployeeLive.Index do
   def assign_form(socket, %Ecto.Changeset{} = changeset) do
     socket
     |> assign(:form, to_form(changeset))
+  end
+
+  def handle_event("sort", %{"sort-by" => sort_by} = params, socket) do
+    IO.inspect(socket.assigns, label: "NEW SORT")
+    {:noreply, socket}
   end
 
   def handle_event("validate", %{"user" => user_params}, socket) do

@@ -469,6 +469,29 @@ defmodule DoItShopWeb.CoreComponents do
     """
   end
 
+  attr :sort, :any, default: nil
+  slot :inner_block, required: true
+
+  def sort_link(assigns) do
+    assigns =
+      assigns
+      |> assign(:sort_by, assigns.sort.sort_by)
+      |> assign(:sort_order, assigns.sort.sort_order)
+
+    ~H"""
+    <.link
+      phx-hook="SortParams"
+      data-sort-by={@sort_by}
+      id={"sort-link-#{@sort_by}"}
+      replace
+      class="sort-link sort-asc"
+      patch={"?sort_by=#{@sort_by}&sort_order=#{@sort_order}"}
+    >
+      <%= render_slot(@inner_block) %><.icon name="hero-chevron-up-down" class="sort-icon" />
+    </.link>
+    """
+  end
+
   @doc ~S"""
   Renders a table with generic styling.
   
@@ -491,9 +514,7 @@ defmodule DoItShopWeb.CoreComponents do
   slot :col, required: true do
     attr :label, :string
 
-    attr :click, :any,
-      required: false,
-      doc: "the function for handling phx-click on each column header"
+    attr :sort_by, :string, doc: "the column to sort by"
   end
 
   slot :action, doc: "the slot for showing user actions in the last table column"
@@ -510,9 +531,20 @@ defmodule DoItShopWeb.CoreComponents do
         <thead class="">
           <tr>
             <th :for={col <- @col} class="pt-5">
-              <button phx-click={col[:click] && col[:click].()}>
+              <.sort_link sort={col[:sort]}>
                 <%= col[:label] %>
-              </button>
+              </.sort_link>
+              
+              <%!-- <.link
+                phx-hook="SortParams"
+                data-sort-by={col[:sort_by]}
+                id={"sort-link-#{col[:label]}"}
+                replace
+                class="sort-link sort-asc"
+                patch={"?sort_by=#{col[:sort_by]}&sort_order=asc"}
+              >
+                <%= col[:label] %><.icon name="hero-chevron-up-down" class="sort-icon" />
+              </.link> --%>
             </th>
             
             <th :if={@action != []} class="">

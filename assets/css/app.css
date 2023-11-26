@@ -3,3 +3,21 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+.sort-icon {
+  transition-timing-function: ease-in-out;
+  transition: all 100ms;
+  clip-path: inset(0 0 0 0);
+}
+
+a[data-is-current-sort="true"][data-sort-order="asc"] .sort-icon {
+  clip-path: inset(8px 0 0 0);
+  transform: translateY(-4px);
+  @apply text-secondary;
+}
+
+a[data-is-current-sort="true"][data-sort-order="desc"] .sort-icon {
+  clip-path: inset(0 0 8px 0);
+  transform: translateY(4px);
+  @apply text-secondary;
+}

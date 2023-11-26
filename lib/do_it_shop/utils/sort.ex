@@ -62,4 +62,12 @@ defmodule DoItShop.Utils.Sort do
   end
 
   defp maybe_reverse(query, _), do: query
+
+  def next_sort(sort_key, %{"sort_by" => sort_by, "sort_order" => sort_order}) do
+    if sort_key == sort_by && sort_order == "asc" do
+      %{sort_by: sort_key, sort_order: :desc}
+    else
+      %{sort_by: sort_key, sort_order: :asc}
+    end
+  end
 end
