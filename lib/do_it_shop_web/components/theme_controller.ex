@@ -8,7 +8,7 @@ defmodule DoItShopWeb.Components.ThemeController do
 
   def theme_controller(assigns) do
     ~H"""
-    <label class="swap swap-rotate">
+    <label class="swap swap-rotate btn btn-ghost">
       <!-- this hidden checkbox controls the state -->
       <input
         id="theme-toggle"

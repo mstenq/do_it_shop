@@ -453,7 +453,7 @@ defmodule DoItShopWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "container", @class]}>
       <div>
         <h1 class="text-2xl font-bold leading-8 text-zinc-800 dark:text-zinc-200">
           <%= render_slot(@inner_block) %>
@@ -484,7 +484,7 @@ defmodule DoItShopWeb.CoreComponents do
       data-sort-by={@sort_by}
       id={"sort-link-#{@sort_by}"}
       replace
-      class="sort-link sort-asc"
+      class="sort-link"
       patch={"?sort_by=#{@sort_by}&sort_order=#{@sort_order}"}
     >
       <%= render_slot(@inner_block) %><.icon name="hero-chevron-up-down" class="sort-icon" />
@@ -513,7 +513,7 @@ defmodule DoItShopWeb.CoreComponents do
 
   slot :col, required: true do
     attr :label, :string
-
+    attr :align, :string
     attr :sort_by, :string, doc: "the column to sort by"
   end
 
@@ -530,21 +530,10 @@ defmodule DoItShopWeb.CoreComponents do
       <table class="table">
         <thead class="">
           <tr>
-            <th :for={col <- @col} class="pt-5">
+            <th :for={col <- @col} class={["pt-5", col[:align] && "text-#{col[:align]}"]}>
               <.sort_link sort={col[:sort]}>
                 <%= col[:label] %>
               </.sort_link>
-              
-              <%!-- <.link
-                phx-hook="SortParams"
-                data-sort-by={col[:sort_by]}
-                id={"sort-link-#{col[:label]}"}
-                replace
-                class="sort-link sort-asc"
-                patch={"?sort_by=#{col[:sort_by]}&sort_order=asc"}
-              >
-                <%= col[:label] %><.icon name="hero-chevron-up-down" class="sort-icon" />
-              </.link> --%>
             </th>
             
             <th :if={@action != []} class="">
@@ -562,7 +551,11 @@ defmodule DoItShopWeb.CoreComponents do
             <td
               :for={col <- @col}
               phx-click={@row_click && @row_click.(row)}
-              class={["whitespace-nowrap", @row_click && "hover:cursor-pointer"]}
+              class={[
+                "whitespace-nowrap",
+                @row_click && "hover:cursor-pointer",
+                col[:align] && "text-#{col[:align]}"
+              ]}
             >
               <%= render_slot(col, @row_item.(row)) %>
             </td>

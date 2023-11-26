@@ -66,7 +66,12 @@ defmodule DoItShopWeb.EmployeeLive.Index do
           <%= employee.email %>
         </:col>
         
-        <:col :let={{_, employee}} label="Role" sort={Sort.next_sort("role", @sort_options)}>
+        <:col
+          :let={{_, employee}}
+          label="Role"
+          sort={Sort.next_sort("role", @sort_options)}
+          align="right"
+        >
           <%= String.capitalize(employee.role.role) %>
         </:col>
       </.table>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-base-200 light [scrollbar-gutter:stable]" data-theme="light">
+<html lang="en" class="bg-base-100 light" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,21 +12,47 @@
     </script>
   </head>
   
-  <body class="flex antialiased">
-    <div class="bg-base-100 min-w-[270px] max-w-[270px] flex max-h-screen min-h-screen flex-col justify-between overflow-y-auto">
-      <div>
-        <div class="flex gap-2 px-5 pt-5 text-sm font-bold ">
-          <.icon name="hero-cube" /> Do It Shop
+  <body class="bg-base-200 antialiased">
+    <div class="drawer lg:drawer-open">
+      <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content">
+        <div class="bg-base-100 border-base-200 flex justify-between border-l p-2">
+          <div class="flex items-center gap-2">
+            <label for="my-drawer-2" class="btn btn-ghost drawer-button lg:hidden">
+              <.icon name="hero-bars-3" />
+            </label>
+            
+            <h2 class="text-sm font-bold lg:hidden"><.icon name="hero-cube" /> Do It Shop</h2>
+          </div>
+          
+          <div>
+            <.theme_controller />
+          </div>
         </div>
         
-        <ul class="menu ">
-          <li>
-            <.nav_link href={~p"/"} current_path={@conn.request_path} exact={true}>
-              <.icon name="hero-home" />Dashboard
-            </.nav_link>
-          </li>
-          
-          <%!-- <li>
+        <div class="h-[calc(100vh-64px)] max-w-[100vw] w-full overflow-y-auto p-5 ">
+          <div class="px-4 py-6 sm:px-6 lg:px-8">
+            <%= @inner_content %>
+          </div>
+        </div>
+      </div>
+      
+      <div class="drawer-side">
+        <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
+        <div class="bg-base-100 flex max-h-screen min-h-screen flex-col justify-between overflow-y-auto lg:min-w-[270px]">
+          <div>
+            <div class="flex gap-2 px-5 pt-5 text-sm font-bold ">
+              <.icon name="hero-cube" /> Do It Shop
+            </div>
+            
+            <ul class="menu ">
+              <li>
+                <.nav_link href={~p"/"} current_path={@conn.request_path} exact={true}>
+                  <.icon name="hero-home" />Dashboard
+                </.nav_link>
+              </li>
+              
+              <%!-- <li>
             <details open>
               <summary><.icon name="hero-user" />Sales</summary>
               <ul>
@@ -37,21 +63,21 @@
               </ul>
             </details>
           </li> --%>
-          <li>
-            <details open>
-              <summary><.icon name="hero-home-modern" />Production</summary>
-              
-              <ul>
-                <li><a>Projects</a></li>
-                
-                <%!-- <li><a>Tasks</a></li>
+              <li>
+                <details open>
+                  <summary><.icon name="hero-home-modern" />Production</summary>
+                  
+                  <ul>
+                    <li><a>Projects</a></li>
+                    
+                    <%!-- <li><a>Tasks</a></li>
                 <li><a>Inventory</a></li>
                 <li><a>Materials</a></li> --%>
-              </ul>
-            </details>
-          </li>
-          
-          <%!-- <li>
+                  </ul>
+                </details>
+              </li>
+              
+              <%!-- <li>
             <details>
               <summary><.icon name="hero-shopping-cart" />Purchasing</summary>
               <ul>
@@ -61,73 +87,67 @@
               </ul>
             </details>
           </li> --%>
-          <li>
-            <details open>
-              <summary><.icon name="hero-cog-6-tooth" />Admin</summary>
+              <li>
+                <details open>
+                  <summary><.icon name="hero-cog-6-tooth" />Admin</summary>
+                  
+                  <ul>
+                    <li>
+                      <.nav_link href={~p"/employees"} current_path={@conn.request_path}>
+                        Employees
+                      </.nav_link>
+                    </li>
+                    
+                    <li><a>Payroll</a></li>
+                    
+                    <li><a>Company Settings</a></li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          </div>
+          
+          <ul class="flex flex-col p-5">
+            <%= if @current_user do %>
+              <li class="leading-6 ">
+                <%= @current_user.email %>
+              </li>
               
-              <ul>
-                <li>
-                  <.nav_link href={~p"/employees"} current_path={@conn.request_path}>
-                    Employees
-                  </.nav_link>
-                </li>
-                
-                <li><a>Payroll</a></li>
-                
-                <li><a>Company Settings</a></li>
-              </ul>
-            </details>
-          </li>
-        </ul>
-      </div>
-      
-      <ul class="flex flex-col p-5">
-        <li><.theme_controller /></li>
-        
-        <%= if @current_user do %>
-          <li class="leading-6 ">
-            <%= @current_user.email %>
-          </li>
-          
-          <li>
-            <.nav_link
-              href={~p"/users/settings"}
-              current_path={@conn.request_path}
-              active_class="text-purple-500"
-              class="text-sm font-semibold leading-6 "
-            >
-              Settings
-            </.nav_link>
-          </li>
-          
-          <li>
-            <.link
-              href={~p"/users/log_out"}
-              method="delete"
-              class="text-sm font-semibold leading-6 "
-            >
-              Log out
-            </.link>
-          </li>
-        <% else %>
-          <li>
-            <.link href={~p"/users/register"} class="font-semibold leading-6 ">
-              Register
-            </.link>
-          </li>
-          
-          <li>
-            <.link href={~p"/users/log_in"} class="font-semibold leading-6 ">
-              Log in
-            </.link>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-    
-    <div class="bg-base-200 max-h-screen min-h-screen w-full flex-grow overflow-y-auto p-5 ">
-      <div class="px-4 py-6 sm:px-6 lg:px-8">
-        <%= @inner_content %>
+              <li>
+                <.nav_link
+                  href={~p"/users/settings"}
+                  current_path={@conn.request_path}
+                  active_class="text-purple-500"
+                  class="text-sm font-semibold leading-6 "
+                >
+                  Settings
+                </.nav_link>
+              </li>
+              
+              <li>
+                <.link
+                  href={~p"/users/log_out"}
+                  method="delete"
+                  class="text-sm font-semibold leading-6 "
+                >
+                  Log out
+                </.link>
+              </li>
+            <% else %>
+              <li>
+                <.link href={~p"/users/register"} class="font-semibold leading-6 ">
+                  Register
+                </.link>
+              </li>
+              
+              <li>
+                <.link href={~p"/users/log_in"} class="font-semibold leading-6 ">
+                  Log in
+                </.link>
+              </li>
+            <% end %>
+          </ul>
+        </div>
       </div>
     </div>
   </body>

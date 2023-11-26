@@ -15,6 +15,7 @@ module.exports = {
   daisyui: {
     logs: false,
   },
+  safelist: ["text-left", "text-right"],
   theme: {
     container: {
       center: true,

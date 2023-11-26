@@ -4,20 +4,26 @@
 
 /* This file is for your main application CSS */
 
+.sort-link:hover .sort-icon {
+  @apply text-secondary;
+}
+
 .sort-icon {
   transition-timing-function: ease-in-out;
   transition: all 100ms;
+  margin: -3px -4px 0 -4px;
   clip-path: inset(0 0 0 0);
+  @apply hover:text-secondary;
 }
 
 a[data-is-current-sort="true"][data-sort-order="asc"] .sort-icon {
-  clip-path: inset(8px 0 0 0);
+  clip-path: inset(10px 0 0 0);
   transform: translateY(-4px);
   @apply text-secondary;
 }
 
 a[data-is-current-sort="true"][data-sort-order="desc"] .sort-icon {
-  clip-path: inset(0 0 8px 0);
+  clip-path: inset(0 0 10px 0);
   transform: translateY(4px);
   @apply text-secondary;
 }
