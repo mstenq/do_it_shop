@@ -122,8 +122,8 @@ defmodule DoItShop.Accounts do
   """
   def register_user(attrs) do
     case Tenants.create_org(attrs) do
-      {:ok, org, admin_role} ->
-        user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => admin_role.id})
+      {:ok, org, owner_role} ->
+        user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => owner_role.id})
 
         %User{}
         |> User.registration_changeset(user_attr)

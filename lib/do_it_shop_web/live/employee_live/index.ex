@@ -44,11 +44,12 @@ defmodule DoItShopWeb.EmployeeLive.Index do
 
   def render(assigns) do
     ~H"""
-    <div class="container pb-2">
-      <div class="prose">
-        <h2 class="">Employees</h2>
-      </div>
-    </div>
+    <.header>
+      Employees
+      <:actions>
+        <.link patch={~p"/employees/new"} class="btn btn-neutral" phx-click="new">Add Employee</.link>
+      </:actions>
+    </.header>
 
     <div class="bg-base-100 container mt-2 rounded-xl p-8 shadow">
       <div class="flex justify-between">
@@ -85,9 +86,10 @@ defmodule DoItShopWeb.EmployeeLive.Index do
 
   def new_employee_form(assigns) do
     ~H"""
-    <div class="prose">
-      <h3>Add Employee</h3>
-    </div>
+    <.header>
+      Add Employee
+      <:subtitle>Add an employee to the organization</:subtitle>
+    </.header>
 
     <.simple_form for={@form} id="new_employee_form" phx-submit="save" phx-change="validate">
       <.input

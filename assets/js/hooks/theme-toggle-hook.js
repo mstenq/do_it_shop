@@ -22,11 +22,11 @@ function getInitialTheme() {
 
 function toggleTheme() {
   const html = document.querySelector("html");
+  html.classList.toggle("light");
   html.classList.toggle("dark");
-  localStorage.setItem(
-    localStorageKey,
-    html.classList.contains("dark") ? "dark" : "light"
-  );
+  const currentMode = html.classList.contains("dark") ? "dark" : "light";
+  html.dataset.theme = currentMode;
+  localStorage.setItem(localStorageKey, currentMode);
 }
 
 export const ThemeToggle = {
