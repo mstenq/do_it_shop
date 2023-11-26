@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class=" light [scrollbar-gutter:stable]" data-theme="light">
+<html lang="en" class="light [scrollbar-gutter:stable]" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,22 +7,25 @@
     <.live_title suffix=" · Phoenix Framework">
       <%= assigns[:page_title] || "DoItShop" %>
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
+  
   <body class="flex antialiased">
     <div class="min-w-[270px] max-w-[270px] flex max-h-screen min-h-screen flex-col justify-between overflow-y-auto">
       <div>
         <div class="flex gap-2 px-5 pt-5 text-sm font-bold ">
           <.icon name="hero-cube" /> Do It Shop
         </div>
+        
         <ul class="menu ">
           <li>
             <.nav_link href={~p"/"} current_path={@conn.request_path} exact={true}>
               <.icon name="hero-home" />Dashboard
             </.nav_link>
           </li>
+          
           <%!-- <li>
             <details open>
               <summary><.icon name="hero-user" />Sales</summary>
@@ -37,14 +40,17 @@
           <li>
             <details open>
               <summary><.icon name="hero-home-modern" />Production</summary>
+              
               <ul>
                 <li><a>Projects</a></li>
+                
                 <%!-- <li><a>Tasks</a></li>
                 <li><a>Inventory</a></li>
                 <li><a>Materials</a></li> --%>
               </ul>
             </details>
           </li>
+          
           <%!-- <li>
             <details>
               <summary><.icon name="hero-shopping-cart" />Purchasing</summary>
@@ -55,28 +61,34 @@
               </ul>
             </details>
           </li> --%>
-
           <li>
             <details open>
               <summary><.icon name="hero-cog-6-tooth" />Admin</summary>
+              
               <ul>
                 <li>
                   <.nav_link href={~p"/employees"} current_path={@conn.request_path}>
                     Employees
                   </.nav_link>
                 </li>
+                
                 <li><a>Payroll</a></li>
+                
                 <li><a>Company Settings</a></li>
               </ul>
             </details>
           </li>
         </ul>
       </div>
+      
       <ul class="flex flex-col p-5">
+        <li><.theme_controller /></li>
+        
         <%= if @current_user do %>
           <li class="leading-6 ">
             <%= @current_user.email %>
           </li>
+          
           <li>
             <.nav_link
               href={~p"/users/settings"}
@@ -87,6 +99,7 @@
               Settings
             </.nav_link>
           </li>
+          
           <li>
             <.link
               href={~p"/users/log_out"}
@@ -102,6 +115,7 @@
               Register
             </.link>
           </li>
+          
           <li>
             <.link href={~p"/users/log_in"} class="font-semibold leading-6 ">
               Log in
@@ -110,6 +124,7 @@
         <% end %>
       </ul>
     </div>
+    
     <div class="bg-base-200 max-h-screen min-h-screen w-full flex-grow overflow-y-auto p-5 ">
       <div class="px-4 py-6 sm:px-6 lg:px-8">
         <%= @inner_content %>

@@ -2,16 +2,16 @@ defmodule DoItShopWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, components, channels, and so on.
-
+  
   This can be used in your application as:
-
+  
       use DoItShopWeb, :controller
       use DoItShopWeb, :html
-
+  
   The definitions below will be executed for every controller,
   component, etc, so keep them short and clean, focused
   on imports, uses and aliases.
-
+  
   Do NOT define functions inside the quoted expressions
   below. Instead, define additional modules and import
   those modules here.
@@ -85,7 +85,7 @@ defmodule DoItShopWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import DoItShopWeb.CoreComponents
-      import DoItShopWeb.CustomComponents
+      use DoItShopWeb.ComponentLibrary
       import DoItShopWeb.Gettext
 
       # Shortcut for generating JS commands

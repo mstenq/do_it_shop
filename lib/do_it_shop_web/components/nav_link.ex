@@ -1,4 +1,7 @@
-defmodule DoItShopWeb.CustomComponents do
+defmodule DoItShopWeb.Components.NavLink do
+  @moduledoc """
+  NavLink components
+  """
   use Phoenix.Component
 
   attr :href, :string, required: true

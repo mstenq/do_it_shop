@@ -11,11 +11,17 @@ defmodule DoItShopWeb.EmployeeLive.Index do
       Accounts.subscribe()
     end
 
-    {:ok, stream(socket, :employees, Accounts.list_users())}
+    {:ok, stream(socket, :employees, [])}
   end
 
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    socket =
+      socket
+      |> stream(:employees, Accounts.list_users(params), reset: true)
+      |> assign(socket.assigns.live_action, params)
+      |> assign(sort_options: params)
+
+    {:noreply, socket}
   end
 
   defp apply_action(socket, :new, _params) do
@@ -49,16 +55,20 @@ defmodule DoItShopWeb.EmployeeLive.Index do
       </div>
       
       <.table id="users_table" rows={@streams.employees}>
-        <:col :let={{_, employee}} label="Name">
+        <:col :let={{_, employee}} label="Name" click={sort_by(:first_name, @sort_options)}>
           <%= String.capitalize(employee.first_name) <> " " <> String.capitalize(employee.last_name) %>
         </:col>
         
-        <:col :let={{_, employee}} label="Email"><%= employee.email %></:col>
+        <:col :let={{_, employee}} label="Email" click={sort_by(:email, @sort_options)}>
+          <%= employee.email %>
+        </:col>
         
-        <:col :let={{_, employee}} label="Role"><%= String.capitalize(employee.role.role) %></:col>
+        <:col :let={{_, employee}} label="Role" click={sort_by(:role, @sort_options)}>
+          <%= String.capitalize(employee.role.role) %>
+        </:col>
       </.table>
     </div>
-
+     <pre><%= inspect(@sort_options, prett: true) %></pre>
     <.modal
       :if={@live_action == :new}
       show
@@ -131,5 +141,12 @@ defmodule DoItShopWeb.EmployeeLive.Index do
   def handle_info(message, socket) do
     IO.warn("UNHANDLED MESSAGE: #{inspect(message)}")
     {:noreply, socket}
+  end
+
+  def sort_by(key, sortOptions \\ %{}) do
+    current_sort_order = sortOptions["sort_order"]
+    IO.puts("current_sort_order: #{inspect(current_sort_order)}")
+    next_sort_order = if current_sort_order == "asc", do: "desc", else: "asc"
+    fn -> JS.patch(~p"/employees?#{%{sort_by: key, sort_order: next_sort_order}}") end
   end
 end
