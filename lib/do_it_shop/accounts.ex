@@ -4,6 +4,7 @@ defmodule DoItShop.Accounts do
   """
 
   import Ecto.Query, warn: false
+  alias DoItShop.Utils.Sort
   alias DoItShop.Tenants.Role
   alias DoItShop.Repo
 
@@ -436,64 +437,19 @@ defmodule DoItShop.Accounts do
     end
   end
 
-  defp valid_sort_by(%{"sort_by" => sort_by} = params)
-       when sort_by in ~w(id first_name last_name email role) do
-    %{params | "sort_by" => String.to_existing_atom(sort_by)}
-  end
-
-  defp valid_sort_by(params) do
-    IO.inspect(params, label: "invalid sort_by", pretty: true)
-    Map.put(params, "sort_by", :first_name)
-  end
-
-  defp valid_sort_order(%{"sort_order" => sort_order} = params) when sort_order in ~w(asc desc) do
-    %{params | "sort_order" => String.to_existing_atom(sort_order)}
-  end
-
-  defp valid_sort_order(params), do: %{params | "sort_order" => :desc}
-
-  def sort_by(query, %{"sort_by" => :role, "sort_order" => sort_order}) do
-    query
-    |> order_by([u, r], {^sort_order, r.role})
-  end
-
-  def sort_by(query, %{"sort_by" => sort_by, "sort_order" => sort_order}) do
-    query |> order_by({^sort_order, ^sort_by})
-  end
-
-  def sort_by(query, _options), do: query
+  @default_sort :first_name
+  @allowed ~w(id first_name last_name email role)
 
   def list_users(params \\ %{}) do
-    IO.inspect(params, label: "params before", pretty: true)
-    params = params |> valid_sort_by() |> valid_sort_order()
-    IO.inspect(params, label: "params after", pretty: true)
+    overrides = %{
+      role: dynamic([_u, r], r.role)
+    }
 
-    users =
-      User
-      |> join(:inner, [u], r in Role, on: u.role_id == r.id)
-      |> preload([:role, :org])
-      |> limit(10)
-      |> sort_by(params)
-      |> Repo.all()
-
-    IO.inspect(users, label: "users", pretty: true)
-    users
+    User
+    |> join(:inner, [u], r in Role, on: u.role_id == r.id)
+    |> preload([:role, :org])
+    |> limit(10)
+    |> Sort.sort(params, @default_sort, @allowed, overrides)
+    |> Repo.all()
   end
-
-  # Sort/Pagination Stuffs
-  defp sort(query, %{sort_by: sort_by, sort_order: sort_order}) do
-    order_by(query, {^sort_order, ^sort_by})
-  end
-
-  defp sort(query, _options), do: query
-
-  defp paginate(query, %{page: page, per_page: per_page}) do
-    offset = max(page - 1, 0) * per_page
-
-    query
-    |> limit(^per_page)
-    |> offset(^offset)
-  end
-
-  defp paginate(query, _options), do: query
 end
