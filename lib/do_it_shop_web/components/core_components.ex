@@ -467,11 +467,7 @@ defmodule DoItShopWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[
-      @actions != [] && "flex items-center justify-between gap-6",
-      "container pb-4",
-      @class
-    ]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4", @class]}>
       <div>
         <div :if={@overtitle != []} class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
           <%= render_slot(@overtitle) %>
@@ -688,7 +684,7 @@ defmodule DoItShopWeb.CoreComponents do
 
   def content(assigns) do
     ~H"""
-    <div class={["bg-base-100 container rounded-xl p-4 shadow md:p-8", @class]}>
+    <div class={["bg-base-100 rounded-xl p-4 shadow md:p-8", @class]}>
       <%= render_slot(@inner_block) %>
     </div>
     """
