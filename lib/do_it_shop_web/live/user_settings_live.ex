@@ -5,12 +5,12 @@ defmodule DoItShopWeb.UserSettingsLive do
 
   def render(assigns) do
     ~H"""
-    <.header class="text-center">
+    <.header>
       Account Settings
       <:subtitle>Manage your account email address and password settings</:subtitle>
     </.header>
 
-    <div class="grid justify-center gap-8 p-8 mt-8 rounded shadow bg-base-100 md:grid-cols-2">
+    <.content class="grid justify-center gap-4 md:grid-cols-2">
       <div>
         <.simple_form
           for={@email_form}
@@ -33,6 +33,7 @@ defmodule DoItShopWeb.UserSettingsLive do
           </:actions>
         </.simple_form>
       </div>
+      
       <div>
         <.simple_form
           for={@password_form}
@@ -46,6 +47,7 @@ defmodule DoItShopWeb.UserSettingsLive do
           <.input
             field={@password_form[:email]}
             type="hidden"
+            class="p-0 m-0"
             id="hidden_user_email"
             value={@current_email}
           />
@@ -69,7 +71,7 @@ defmodule DoItShopWeb.UserSettingsLive do
           </:actions>
         </.simple_form>
       </div>
-    </div>
+    </.content>
     """
   end
 

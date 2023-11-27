@@ -139,7 +139,9 @@ defmodule DoItShop.Tenants do
   
   """
   def list_roles do
-    Repo.all(Role)
+    Role
+    |> where([r], r.role != "owner")
+    |> Repo.all()
   end
 
   @doc """

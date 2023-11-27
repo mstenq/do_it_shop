@@ -27,3 +27,31 @@ a[data-is-current-sort="true"][data-sort-order="desc"] .sort-icon {
   transform: translateY(4px);
   @apply text-secondary;
 }
+
+.table-responsive {
+  --tw-bg-opacity: 1;
+  --table-background-color: var(
+    --fallback-b1,
+    oklch(var(--b1) / var(--tw-bg-opacity))
+  );
+
+  background-image: linear-gradient(
+      to right,
+      var(--table-background-color),
+      var(--table-background-color)
+    ),
+    linear-gradient(
+      to right,
+      var(--table-background-color),
+      var(--table-background-color)
+    ),
+    linear-gradient(to right, rgba(0, 0, 20, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(to left, rgba(0, 0, 20, 0.3), rgba(255, 255, 255, 0));
+  /* Shadows */
+  /* Shadow covers */
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-color: var(--table-background-color);
+  background-size: 20px 100%, 20px 100%, 10px 100%, 10px 100%;
+  background-attachment: local, local, scroll, scroll;
+}

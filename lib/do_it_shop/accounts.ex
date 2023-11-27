@@ -448,8 +448,28 @@ defmodule DoItShop.Accounts do
     User
     |> join(:inner, [u], r in Role, on: u.role_id == r.id)
     |> preload([:role, :org])
+    |> search(params)
     |> limit(10)
     |> Sort.sort(params, @default_sort, @allowed, overrides)
     |> Repo.all()
   end
+
+  defp search(query, %{"search" => search}) do
+    search = String.trim(search) |> String.split() |> Enum.join(" & ")
+    search_term = "#{search}:*"
+
+    case String.length(search) > 2 do
+      true ->
+        query
+        |> where(fragment("searchable @@ to_tsquery(?)", ^search_term))
+        |> order_by(
+          desc: fragment("ts_rank_cd(searchable, websearch_to_tsquery(?), 4)", ^search_term)
+        )
+
+      false ->
+        query
+    end
+  end
+
+  defp search(query, _params), do: query
 end

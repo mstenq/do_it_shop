@@ -4,7 +4,7 @@ defmodule DoItShopWeb.Components.NavLink do
   """
   use Phoenix.Component
 
-  attr :href, :string, required: true
+  attr :navigate, :string, required: true
   attr :current_path, :string, required: true
   attr :class, :string, default: ""
   attr :exact, :boolean, default: false
@@ -16,24 +16,24 @@ defmodule DoItShopWeb.Components.NavLink do
     assigns = assign_active_class(assigns)
 
     ~H"""
-    <.link href={@href} class={[@active_class, @class]}>
+    <.link navigate={@navigate} class={[@active_class, @class]}>
       <%= render_slot(@inner_block) %>
     </.link>
     """
   end
 
   def assign_active_class(
-        %{href: href, current_path: current_path, active_class: active_class, exact: true} =
+        %{navigate: navigate, current_path: current_path, active_class: active_class, exact: true} =
           assigns
       ) do
-    active_class = if href == current_path, do: active_class, else: ""
+    active_class = if navigate == current_path, do: active_class, else: ""
     assign(assigns, active_class: active_class)
   end
 
   def assign_active_class(
-        %{href: href, current_path: current_path, active_class: active_class} = assigns
+        %{navigate: navigate, current_path: current_path, active_class: active_class} = assigns
       ) do
-    active_class = if String.starts_with?(current_path, href), do: active_class, else: ""
+    active_class = if String.starts_with?(current_path, navigate), do: active_class, else: ""
     assign(assigns, active_class: active_class)
   end
 end

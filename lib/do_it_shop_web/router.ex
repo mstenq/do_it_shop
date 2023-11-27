@@ -71,6 +71,7 @@ defmodule DoItShopWeb.Router do
 
       live "/employees", EmployeeLive.Index, :index
       live "/employees/new", EmployeeLive.Index, :new
+      live "/employees/:id", EmployeeLive.Show, :show
     end
   end
 

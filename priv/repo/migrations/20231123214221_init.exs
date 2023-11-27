@@ -47,6 +47,20 @@ defmodule DoItShop.Repo.Migrations.CreateUsersAuthTables do
       timestamps(type: :utc_datetime)
     end
 
+    execute """
+      ALTER TABLE users
+        ADD COLUMN searchable tsvector
+        GENERATED ALWAYS AS (
+          setweight(to_tsvector('english', coalesce(first_name, '')), 'A') ||
+          setweight(to_tsvector('english', coalesce(last_name, '')), 'B') ||
+          setweight(to_tsvector('english', coalesce(email, '')), 'C')
+        ) STORED;
+    """
+
+    execute """
+      CREATE INDEX users_searchable_idx ON users USING gin(searchable);
+    """
+
     create unique_index(:users, [:email])
     create index(:users, [:org_id])
 

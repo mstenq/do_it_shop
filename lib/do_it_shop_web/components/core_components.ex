@@ -386,6 +386,19 @@ defmodule DoItShopWeb.CoreComponents do
     """
   end
 
+  def input(%{type: "hidden"} = assigns) do
+    ~H"""
+    <input
+      type={@type}
+      hidden
+      name={@name}
+      id={@id}
+      value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+      {@rest}
+    />
+    """
+  end
+
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
@@ -448,13 +461,22 @@ defmodule DoItShopWeb.CoreComponents do
   attr :class, :string, default: nil
 
   slot :inner_block, required: true
+  slot :overtitle
   slot :subtitle
   slot :actions
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "container", @class]}>
+    <header class={[
+      @actions != [] && "flex items-center justify-between gap-6",
+      "container pb-4",
+      @class
+    ]}>
       <div>
+        <div :if={@overtitle != []} class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+          <%= render_slot(@overtitle) %>
+        </div>
+        
         <h1 class="text-2xl font-bold leading-8 text-zinc-800 dark:text-zinc-200">
           <%= render_slot(@inner_block) %>
         </h1>
@@ -464,7 +486,7 @@ defmodule DoItShopWeb.CoreComponents do
         </p>
       </div>
       
-      <div class="flex-none"><%= render_slot(@actions) %></div>
+      <div class="flex flex-none items-center gap-2"><%= render_slot(@actions) %></div>
     </header>
     """
   end
@@ -506,6 +528,7 @@ defmodule DoItShopWeb.CoreComponents do
   attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+  attr :class, :string, default: nil
 
   attr :row_item, :any,
     default: &Function.identity/1,
@@ -526,7 +549,7 @@ defmodule DoItShopWeb.CoreComponents do
       end
 
     ~H"""
-    <div class="overflow-x-auto">
+    <div class={["table-responsive overflow-x-auto", @class]}>
       <table class="table">
         <thead class="">
           <tr>
@@ -614,12 +637,14 @@ defmodule DoItShopWeb.CoreComponents do
 
   def back(assigns) do
     ~H"""
-    <div class="mt-16">
+    <div class="">
       <.link
         navigate={@navigate}
-        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+        class="flex items-center gap-1 text-sm font-semibold leading-6 group text-base-content hover:underline"
       >
-        <.icon name="hero-arrow-left-solid" class="w-3 h-3" /> <%= render_slot(@inner_block) %>
+        <.icon name="hero-arrow-left-solid" class="w-4 h-4 mt-px group-hover:text-secondary" /> <%= render_slot(
+          @inner_block
+        ) %>
       </.link>
     </div>
     """
@@ -655,6 +680,17 @@ defmodule DoItShopWeb.CoreComponents do
   def icon(%{name: "custom-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
+    """
+  end
+
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  def content(assigns) do
+    ~H"""
+    <div class={["bg-base-100 container rounded-xl p-4 shadow md:p-8", @class]}>
+      <%= render_slot(@inner_block) %>
+    </div>
     """
   end
 

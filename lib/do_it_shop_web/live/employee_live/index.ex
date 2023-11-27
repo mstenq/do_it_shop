@@ -47,17 +47,25 @@ defmodule DoItShopWeb.EmployeeLive.Index do
     <.header>
       Employees
       <:actions>
-        <.link patch={~p"/employees/new"} class="btn btn-neutral" phx-click="new">Add Employee</.link>
+        <.link class="btn btn-ghost" patch={~p"/employees/new"}>
+          <.icon name="hero-plus" />Add Employee
+        </.link>
       </:actions>
     </.header>
 
-    <div class="bg-base-100 container mt-2 rounded-xl p-8 shadow">
+    <.content class="">
       <div class="flex justify-between">
-        <.input type="search" name="search" value="" placeholder="Search" />
-        <.link class="btn" patch={~p"/employees/new"}>Add Employee</.link>
+        <form phx-change="filter" phx-submit="filter">
+          <.input type="search" name="search" placeholder="Search" value="" phx-debounce="500" />
+        </form>
       </div>
       
-      <.table id="users_table" rows={@streams.employees}>
+      <.table
+        id="users_table"
+        rows={@streams.employees}
+        row_click={fn {_, employee} -> JS.patch(~p"/employees/#{employee.id}") end}
+        class="mt-2"
+      >
         <:col :let={{_, employee}} label="Name" sort={Sort.next_sort("first_name", @sort_options)}>
           <%= String.capitalize(employee.first_name) <> " " <> String.capitalize(employee.last_name) %>
         </:col>
@@ -75,7 +83,7 @@ defmodule DoItShopWeb.EmployeeLive.Index do
           <%= String.capitalize(employee.role.role) %>
         </:col>
       </.table>
-    </div>
+    </.content>
 
     <.modal
       :if={@live_action == :new}
@@ -143,19 +151,29 @@ defmodule DoItShopWeb.EmployeeLive.Index do
     end
   end
 
+  def handle_event("filter", %{"search" => search}, socket) do
+    params = %{"search" => search}
+
+    socket =
+      socket
+      |> push_patch(to: ~p"/employees?#{params}", replace: true)
+
+    {:noreply, socket}
+  end
+
   def handle_info({:user_created, user}, socket) do
     {:noreply, stream_insert(socket, :employees, user)}
   end
 
-  def handle_info(message, socket) do
-    IO.warn("UNHANDLED MESSAGE: #{inspect(message)}")
-    {:noreply, socket}
-  end
+  # def handle_info(message, socket) do
+  #   IO.warn("UNHANDLED MESSAGE: #{inspect(message)}")
+  #   {:noreply, socket}
+  # end
 
-  def sort_by(key, sortOptions \\ %{}) do
-    current_sort_order = sortOptions["sort_order"]
-    IO.puts("current_sort_order: #{inspect(current_sort_order)}")
-    next_sort_order = if current_sort_order == "asc", do: "desc", else: "asc"
-    fn -> JS.patch(~p"/employees?#{%{sort_by: key, sort_order: next_sort_order}}") end
-  end
+  # def sort_by(key, sortOptions \\ %{}) do
+  #   current_sort_order = sortOptions["sort_order"]
+  #   IO.puts("current_sort_order: #{inspect(current_sort_order)}")
+  #   next_sort_order = if current_sort_order == "asc", do: "desc", else: "asc"
+  #   fn -> JS.patch(~p"/employees?#{%{sort_by: key, sort_order: next_sort_order}}") end
+  # end
 end
