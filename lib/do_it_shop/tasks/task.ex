@@ -19,7 +19,15 @@ defmodule DoItShop.Tasks.Task do
   @doc false
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:title, :due_date, :priority, :status, :notes, :qty])
+    |> cast(attrs, [
+      :title,
+      :due_date,
+      :priority,
+      :status,
+      :notes,
+      :qty,
+      :assigned_user_id
+    ])
     |> DoItShop.Repo.set_default_fields()
     |> validate_required([:title, :due_date, :priority, :status, :notes, :qty])
   end

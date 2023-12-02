@@ -178,8 +178,8 @@ defmodule DoItShopWeb.UserAuth do
         user = Accounts.get_user_by_session_token(user_token)
 
         if(user) do
-          DoItShop.Store.put_org_id(user.org_id)
-          DoItShop.Store.put_current_user(user)
+          DoItShop.Store.set_org_id(user.org_id)
+          DoItShop.Store.set_current_user(user)
         end
 
         user
@@ -208,8 +208,8 @@ defmodule DoItShopWeb.UserAuth do
   """
   def require_authenticated_user(conn, _opts) do
     if conn.assigns[:current_user] do
-      DoItShop.Store.put_org_id(conn.assigns[:current_user].org_id)
-      DoItShop.Store.put_current_user(conn.assigns[:current_user])
+      DoItShop.Store.set_org_id(conn.assigns[:current_user].org_id)
+      DoItShop.Store.set_current_user(conn.assigns[:current_user])
       conn
     else
       conn

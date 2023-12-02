@@ -115,6 +115,7 @@ defmodule DoItShop.Accounts do
     case Tenants.create_org(attrs) do
       {:ok, org, owner_role} ->
         user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => owner_role.id})
+        DoItShop.Store.set_org_id(org.org_id)
 
         {:ok, user} =
           %User{}
@@ -122,8 +123,7 @@ defmodule DoItShop.Accounts do
           |> Repo.insert()
           |> broadcast_user(:user_created)
 
-        DoItShop.Store.put_org_id(org.org_id)
-        DoItShop.Store.put_current_user(user)
+        DoItShop.Store.set_current_user(user)
 
         {:ok, user}
 
@@ -146,14 +146,14 @@ defmodule DoItShop.Accounts do
   end
 
   def add_user_to_org(attrs) do
-    org_id = DoItShop.store().get_org_id()
+    current_user = DoItShop.Store.get_current_user()
     temporary_password = "temporary_password"
 
     user_attrs =
       Map.merge(attrs, %{
-        "org_id" => org_id,
+        "org_id" => current_user.org_id,
         "password" => temporary_password,
-        "company_name" => "I suck at coding"
+        "company_name" => "whatever not used"
       })
 
     %User{}

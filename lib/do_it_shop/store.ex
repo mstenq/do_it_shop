@@ -1,7 +1,7 @@
 defmodule DoItShop.Store do
   @org_id_key {__MODULE__, :org_id}
 
-  def put_org_id(org_id) do
+  def set_org_id(org_id) do
     Process.put(@org_id_key, org_id)
   end
 
@@ -10,7 +10,7 @@ defmodule DoItShop.Store do
   end
 
   @current_user_key {__MODULE__, :current_user}
-  def put_current_user(user = %DoItShop.Accounts.User{}) do
+  def set_current_user(user = %DoItShop.Accounts.User{}) do
     Process.put(@current_user_key, user)
   end
 
