@@ -29,7 +29,7 @@ defmodule DoItShopWeb.Components.Dropdown do
        <%!-- Render any old thing in the dropdown --%>
       <div
         :if={@actions == []}
-        class="dropdown-content z-[1] bg-base-100 rounded-box border-base-200 border p-2 shadow-xl"
+        class="dropdown-content z-[2] bg-base-100 rounded-box border-base-200 border p-2 shadow-xl"
       >
         <%= render_slot(@inner_block) %>
       </div>

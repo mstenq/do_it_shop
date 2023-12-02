@@ -459,7 +459,7 @@ defmodule DoItShopWeb.CoreComponents do
   Renders a header with title.
   """
   attr :class, :string, default: nil
-
+  attr :rest, :global
   slot :inner_block, required: true
   slot :overtitle
   slot :subtitle
@@ -467,7 +467,10 @@ defmodule DoItShopWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4", @class]}>
+    <header
+      class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4", @class]}
+      {@rest}
+    >
       <div>
         <div :if={@overtitle != []} class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
           <%= render_slot(@overtitle) %>
@@ -550,9 +553,10 @@ defmodule DoItShopWeb.CoreComponents do
         <thead class="">
           <tr>
             <th :for={col <- @col} class={["pt-5", col[:align] && "text-#{col[:align]}"]}>
-              <.sort_link sort={col[:sort]}>
+              <.sort_link :if={col[:sort]} sort={col[:sort]}>
                 <%= col[:label] %>
               </.sort_link>
+               <span :if={!col[:sort]}><%= col[:label] %></span>
             </th>
             
             <th :if={@action != []} class="">
@@ -680,11 +684,12 @@ defmodule DoItShopWeb.CoreComponents do
   end
 
   attr :class, :string, default: nil
+  attr :id, :string, default: ""
   slot :inner_block, required: true
 
   def content(assigns) do
     ~H"""
-    <div class={["bg-base-100 rounded-xl p-4 shadow md:p-8", @class]}>
+    <div id={@id} class={["bg-base-100 rounded-xl p-4 shadow md:p-8", @id && "scrollspy", @class]}>
       <%= render_slot(@inner_block) %>
     </div>
     """

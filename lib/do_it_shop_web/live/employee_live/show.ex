@@ -17,16 +17,34 @@ defmodule DoItShopWeb.EmployeeLive.Show do
 
   def render(assigns) do
     ~H"""
-    <.header>
+    <div class="z-[1] bg-base-100 sticky top-0 -mx-3 -mt-3 flex items-center justify-between overflow-hidden border-b border-l pl-4 dark:border-zinc-800 sm:-mx-4 sm:-mt-4 md:-mx-8 md:-mt-8">
       <.back navigate={~p"/employees"} phx-click="index">Employees</.back>
       
+      <div id="scroll-spy-menu" phx-hook="ScrollSpy" class="relative flex">
+        <a href="#details" class="menu-item ">
+          Details
+        </a>
+        
+        <a href="#time-entries" class="menu-item ">
+          Time Entries
+        </a>
+         <a href="#pto" class="menu-item ">PTO</a>
+        <a href="#tasks" class="menu-item ">
+          Tasks
+        </a>
+         <div id="scroll-indicator" />
+      </div>
+    </div>
+
+    <%!-- <.header>
+      <.back navigate={~p"/employees"} phx-click="index">Employees</.back>
+    
       <:actions>
         <.button class="btn-ghost"><.icon name="hero-plus" />Add Employee</.button>
       </:actions>
-    </.header>
-
-    <div class="flex flex-col gap-8 xl:flex-row">
-      <.content class="flex-grow w-full">
+    </.header> --%>
+    <div class="mt-8 flex flex-col gap-8 xl:flex-row">
+      <.content id="details" class="flex-grow w-full">
         <.header>
           <%= "#{@employee.first_name} #{@employee.last_name}" %>
           <:actions>
@@ -69,11 +87,16 @@ defmodule DoItShopWeb.EmployeeLive.Show do
       </.content>
     </div>
 
-    <.content class="mt-8">
-      <div role="tablist" class="tabs tabs-lg tabs-boxed max-w-[500px]">
-        <a role="tab" class="tab tab-active bg-white">Time Entries</a>
-        <a role="tab" class="tab">PTO</a> <a role="tab" class="tab">Tasks</a>
-      </div>
+    <.content id="time-entries" class="mt-8 h-96">
+      <.header>Time Entries</.header>
+    </.content>
+
+    <.content id="pto" class="mt-8 h-96">
+      <.header>PTO</.header>
+    </.content>
+
+    <.content id="tasks" class="mt-8 h-96">
+      <.header>Tasks</.header>
     </.content>
     """
   end

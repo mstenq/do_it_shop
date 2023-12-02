@@ -4,6 +4,11 @@
 
 /* This file is for your main application CSS */
 
+* {
+  scroll-behavior: smooth;
+  scroll-margin: 65px;
+}
+
 .sort-link:hover .sort-icon {
   @apply text-secondary;
 }
@@ -54,4 +59,19 @@ a[data-is-current-sort="true"][data-sort-order="desc"] .sort-icon {
   background-color: var(--table-background-color);
   background-size: 20px 100%, 20px 100%, 10px 100%, 10px 100%;
   background-attachment: local, local, scroll, scroll;
+}
+
+/**
+  * Scrollspy Styles
+  */
+
+#scroll-indicator {
+  @apply absolute bottom-0 h-[2px] bg-secondary transition-all duration-500 ease-in-out rounded-full;
+}
+.menu-item {
+  @apply px-4 py-2.5 text-sm transition-all duration-200;
+}
+
+.menu-item.active {
+  @apply text-secondary;
 }

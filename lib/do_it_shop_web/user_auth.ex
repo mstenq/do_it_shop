@@ -15,11 +15,11 @@ defmodule DoItShopWeb.UserAuth do
 
   @doc """
   Logs the user in.
-
+  
   It renews the session ID and clears the whole session
   to avoid fixation attacks. See the renew_session
   function to customize this behaviour.
-
+  
   It also sets a `:live_socket_id` key in the session,
   so LiveView sessions are identified and automatically
   disconnected on log out. The line can be safely removed
@@ -67,7 +67,7 @@ defmodule DoItShopWeb.UserAuth do
 
   @doc """
   Logs the user out.
-
+  
   It clears all session data for safety. See renew_session.
   """
   def log_out_user(conn) do
@@ -110,35 +110,35 @@ defmodule DoItShopWeb.UserAuth do
 
   @doc """
   Handles mounting and authenticating the current_user in LiveViews.
-
+  
   ## `on_mount` arguments
-
+  
     * `:mount_current_user` - Assigns current_user
       to socket assigns based on user_token, or nil if
       there's no user_token or no matching user.
-
+  
     * `:ensure_authenticated` - Authenticates the user from the session,
       and assigns the current_user to socket assigns based
       on user_token.
       Redirects to login page if there's no logged user.
-
+  
     * `:redirect_if_user_is_authenticated` - Authenticates the user from the session.
       Redirects to signed_in_path if there's a logged user.
-
+  
   ## Examples
-
+  
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
   the current_user:
-
+  
       defmodule DoItShopWeb.PageLive do
         use DoItShopWeb, :live_view
-
+  
         on_mount {DoItShopWeb.UserAuth, :mount_current_user}
         ...
       end
-
+  
   Or use the `live_session` of your router to invoke the on_mount callback:
-
+  
       live_session :authenticated, on_mount: [{DoItShopWeb.UserAuth, :ensure_authenticated}] do
         live "/profile", ProfileLive, :index
       end
@@ -178,7 +178,7 @@ defmodule DoItShopWeb.UserAuth do
         user = Accounts.get_user_by_session_token(user_token)
 
         if(user) do
-          DoItShop.Repo.put_org_id(user.org_id)
+          DoItShop.Store.put_org_id(user.org_id)
         end
 
         user
@@ -201,13 +201,13 @@ defmodule DoItShopWeb.UserAuth do
 
   @doc """
   Used for routes that require the user to be authenticated.
-
+  
   If you want to enforce the user email is confirmed before
   they use the application at all, here would be a good place.
   """
   def require_authenticated_user(conn, _opts) do
     if conn.assigns[:current_user] do
-      DoItShop.Repo.put_org_id(conn.assigns[:current_user].org_id)
+      DoItShop.Store.put_org_id(conn.assigns[:current_user].org_id)
       conn
     else
       conn

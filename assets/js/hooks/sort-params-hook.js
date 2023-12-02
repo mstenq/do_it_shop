@@ -1,6 +1,5 @@
 function getSortParamsFromURL() {
   const params = new URLSearchParams(window.location.search);
-  console.log(params);
   const current_sort_by = params.get("sort_by") ?? "";
   const current_sort_order = params.get("sort_order") ?? "";
 

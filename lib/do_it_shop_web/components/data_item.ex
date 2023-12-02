@@ -12,7 +12,7 @@ defmodule DoItShopWeb.Components.DataItem do
   def data_row(assigns) do
     ~H"""
     <div class={[
-      "grid grid-cols-1 divide-y border-t dark:divide-zinc-700 dark:border-zinc-700",
+      "grid grid-cols-1 divide-y border-t dark:divide-zinc-700 dark:border-zinc-700 lg:divide-y-0",
       @cols
     ]}>
       <%= render_slot(@inner_block) %>

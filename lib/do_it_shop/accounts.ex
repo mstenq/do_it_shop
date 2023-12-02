@@ -12,12 +12,11 @@ defmodule DoItShop.Accounts do
   alias DoItShop.Tenants
 
   def get_topic do
-    inspect(__MODULE__) <> "." <> Integer.to_string(Repo.get_org_id())
+    inspect(__MODULE__) <> "." <> Integer.to_string(DoItShop.Store.get_org_id())
   end
 
   def subscribe do
     topic = get_topic()
-    IO.puts("subscribing to #{topic}")
     Phoenix.PubSub.subscribe(DoItShop.PubSub, topic)
   end
 
@@ -26,18 +25,11 @@ defmodule DoItShop.Accounts do
   todo: need to implement [:user_updated, :user_deleted]
   """
   def broadcast({:ok, user}, tag) do
-    IO.puts("broadcasting event #{inspect(tag)}")
-
-    if is_atom(tag) do
-      IO.puts("is atom")
-    end
-
     Phoenix.PubSub.broadcast(DoItShop.PubSub, get_topic(), {tag, user})
     {:ok, user}
   end
 
   def broadcast(_, _tag) do
-    IO.inspect("error broadcasting user", label: "broadcast error", pretty: true)
     :error
   end
 
@@ -92,17 +84,16 @@ defmodule DoItShop.Accounts do
       ** (Ecto.NoResultsError)
   
   """
-  def get_user!(id), do: Repo.get!(User, id) |> Repo.preload([:role, :org])
+  def get_user!(id, opts \\ []) do
+    IO.inspect(opts, label: "GET USER OPTS", pretty: true)
+    Repo.get!(User, id, opts) |> Repo.preload([:role, :org])
+  end
 
   def broadcast_user({:ok, user}, tag) do
-    IO.puts("PREPPING TO BROADCAST USER #{inspect(user)}")
-    test = get_user!(user.id)
-    IO.puts("########################## broadcasting user #{inspect(test)}")
-    broadcast({:ok, get_user!(user.id)}, tag)
+    broadcast({:ok, get_user!(user.id, skip_org_id: true)}, tag)
   end
 
   def broadcast_user(_, _tag) do
-    IO.puts("damn error broadcasting user")
     :error
   end
 
@@ -125,10 +116,15 @@ defmodule DoItShop.Accounts do
       {:ok, org, owner_role} ->
         user_attr = Map.merge(attrs, %{"org_id" => org.org_id, "role_id" => owner_role.id})
 
-        %User{}
-        |> User.registration_changeset(user_attr)
-        |> Repo.insert()
-        |> broadcast_user(:user_created)
+        {:ok, user} =
+          %User{}
+          |> User.registration_changeset(user_attr)
+          |> Repo.insert()
+          |> broadcast_user(:user_created)
+
+        # TODO - Put Current User.
+        DoItShop.Repo.put_org_id(org.org_id)
+        {:ok, user}
 
       {:error, _} ->
         {:error, %Ecto.Changeset{}}
@@ -149,7 +145,7 @@ defmodule DoItShop.Accounts do
   end
 
   def add_user_to_org(attrs) do
-    org_id = Repo.get_org_id()
+    org_id = DoItShop.store().get_org_id()
     temporary_password = "temporary_password"
 
     user_attrs =
@@ -445,13 +441,18 @@ defmodule DoItShop.Accounts do
       role: dynamic([_u, r], r.role)
     }
 
-    User
-    |> join(:inner, [u], r in Role, on: u.role_id == r.id)
-    |> preload([:role, :org])
-    |> search(params)
-    |> limit(10)
-    |> Sort.sort(params, @default_sort, @allowed, overrides)
-    |> Repo.all()
+    users =
+      User
+      |> join(:inner, [u], r in Role, on: u.role_id == r.id)
+      |> preload([:role, :org])
+      |> search(params)
+      |> limit(10)
+      |> Sort.sort(params, @default_sort, @allowed, overrides)
+      |> Repo.all()
+
+    IO.inspect(users, label: "users results")
+
+    users
   end
 
   defp search(query, %{"search" => search}) do

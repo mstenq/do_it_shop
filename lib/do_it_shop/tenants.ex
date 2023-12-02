@@ -54,7 +54,7 @@ defmodule DoItShop.Tenants do
          |> Org.changeset(attrs)
          |> Repo.insert() do
       {:ok, org} ->
-        DoItShop.Repo.put_org_id(org.org_id)
+        # DoItShop.Repo.put_org_id(org.org_id)
         # Create default roles for the Org
         case create_default_roles(org.org_id) do
           {:ok, created_roles} ->
@@ -68,16 +68,6 @@ defmodule DoItShop.Tenants do
       {:error, changeset} ->
         changeset
     end
-
-    # {:ok, org} =
-    #   %Org{}
-    #   |> Org.changeset(attrs)
-    #   |> Repo.insert()
-
-    # if org do
-    #   DoItShop.Repo.put_org_id(org.org_id)
-    #   {:ok, org}
-    # end
   end
 
   @doc """

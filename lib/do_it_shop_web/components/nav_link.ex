@@ -5,7 +5,6 @@ defmodule DoItShopWeb.Components.NavLink do
   use Phoenix.Component
 
   attr :navigate, :string, required: true
-  attr :current_path, :string, required: true
   attr :class, :string, default: ""
   attr :exact, :boolean, default: false
   attr :active_class, :string, default: "active"
@@ -13,27 +12,17 @@ defmodule DoItShopWeb.Components.NavLink do
   slot :inner_block, required: true
 
   def nav_link(assigns) do
-    assigns = assign_active_class(assigns)
-
     ~H"""
-    <.link navigate={@navigate} class={[@active_class, @class]}>
+    <.link
+      id={"nav-link-#{@navigate}"}
+      phx-hook="NavLink"
+      data-exact={to_string(@exact)}
+      data-active-class={@active_class}
+      navigate={@navigate}
+      class={[@class]}
+    >
       <%= render_slot(@inner_block) %>
     </.link>
     """
-  end
-
-  def assign_active_class(
-        %{navigate: navigate, current_path: current_path, active_class: active_class, exact: true} =
-          assigns
-      ) do
-    active_class = if navigate == current_path, do: active_class, else: ""
-    assign(assigns, active_class: active_class)
-  end
-
-  def assign_active_class(
-        %{navigate: navigate, current_path: current_path, active_class: active_class} = assigns
-      ) do
-    active_class = if String.starts_with?(current_path, navigate), do: active_class, else: ""
-    assign(assigns, active_class: active_class)
   end
 end
