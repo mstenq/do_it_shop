@@ -24,6 +24,7 @@ defmodule DoItShopWeb.UserSessionController do
     if user = Accounts.get_user_by_email_and_password(email, password) do
       if(user) do
         DoItShop.Store.put_org_id(user.org_id)
+        DoItShop.Store.put_current_user(user)
       end
 
       conn

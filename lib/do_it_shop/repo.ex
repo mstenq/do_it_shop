@@ -25,4 +25,18 @@ defmodule DoItShop.Repo do
   def default_options(_operation) do
     [org_id: DoItShop.Store.get_org_id()]
   end
+
+  def set_org(changeset) do
+    Ecto.Changeset.put_change(changeset, :org_id, DoItShop.Store.get_org_id())
+  end
+
+  def set_created_user_id(changeset) do
+    Ecto.Changeset.put_change(changeset, :created_user_id, DoItShop.Store.get_current_user().id)
+  end
+
+  def set_default_fields(changeset) do
+    changeset
+    |> set_org()
+    |> set_created_user_id()
+  end
 end

@@ -179,6 +179,7 @@ defmodule DoItShopWeb.UserAuth do
 
         if(user) do
           DoItShop.Store.put_org_id(user.org_id)
+          DoItShop.Store.put_current_user(user)
         end
 
         user
@@ -208,6 +209,7 @@ defmodule DoItShopWeb.UserAuth do
   def require_authenticated_user(conn, _opts) do
     if conn.assigns[:current_user] do
       DoItShop.Store.put_org_id(conn.assigns[:current_user].org_id)
+      DoItShop.Store.put_current_user(conn.assigns[:current_user])
       conn
     else
       conn

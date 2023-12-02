@@ -20,11 +20,7 @@ defmodule DoItShop.Tasks.Task do
   def changeset(task, attrs) do
     task
     |> cast(attrs, [:title, :due_date, :priority, :status, :notes, :qty])
-    |> set_org()
+    |> DoItShop.Repo.set_default_fields()
     |> validate_required([:title, :due_date, :priority, :status, :notes, :qty])
-  end
-
-  defp set_org(changeset) do
-    put_change(changeset, :org_id, DoItShop.Store.get_org_id())
   end
 end

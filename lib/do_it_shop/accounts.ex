@@ -122,8 +122,9 @@ defmodule DoItShop.Accounts do
           |> Repo.insert()
           |> broadcast_user(:user_created)
 
-        # TODO - Put Current User.
-        DoItShop.Repo.put_org_id(org.org_id)
+        DoItShop.Store.put_org_id(org.org_id)
+        DoItShop.Store.put_current_user(user)
+
         {:ok, user}
 
       {:error, _} ->
