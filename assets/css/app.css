@@ -9,6 +9,23 @@
   scroll-margin: 65px;
 }
 
+.scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  @apply bg-transparent shadow-inner;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  @apply rounded-full shadow-sm bg-zinc-400 dark:bg-zinc-700/80;
+}
+
+.nav-link:has(a.active-nav) {
+  @apply bg-neutral text-neutral-content;
+}
+
 .sort-link:hover .sort-icon {
   @apply text-secondary;
 }
