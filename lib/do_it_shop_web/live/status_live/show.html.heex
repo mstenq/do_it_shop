@@ -1,0 +1,27 @@
+<.header>
+  Status <%= @status.id %>
+  <:subtitle>This is a status record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/task_status/#{@status}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit status</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Title"><%= @status.title %></:item>
+  <:item title="Position"><%= @status.position %></:item>
+</.list>
+
+<.back navigate={~p"/task_status"}>Back to task_status</.back>
+
+<.modal :if={@live_action == :edit} id="status-modal" show on_cancel={JS.patch(~p"/task_status/#{@status}")}>
+  <.live_component
+    module={DoItShopWeb.StatusLive.FormComponent}
+    id={@status.id}
+    title={@page_title}
+    action={@live_action}
+    status={@status}
+    patch={~p"/task_status/#{@status}"}
+  />
+</.modal>

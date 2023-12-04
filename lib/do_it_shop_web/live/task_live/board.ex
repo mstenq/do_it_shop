@@ -6,6 +6,7 @@ defmodule DoItShopWeb.TaskLive.Board do
 
   @impl true
   def mount(_params, _session, socket) do
+    socket = stream(socket, :columns, Tasks.list_task_status())
     {:ok, stream(socket, :tasks, Tasks.list_tasks())}
   end
 

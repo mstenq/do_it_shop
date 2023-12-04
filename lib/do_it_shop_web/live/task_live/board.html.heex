@@ -8,14 +8,20 @@
 </.header>
 
 <div class="scrollable flex gap-4 overflow-y-auto pb-4 lg:max-w-[calc(100vw-351px)]">
-  <div :for={i <- 1..7} class="min-w-[300px] flex-1">
+  <div
+    :for={{col_id, status} <- @streams.columns}
+    id={"column-#{col_id}"}
+    class="min-w-[300px] flex-1"
+  >
     <h2 class="bg-neutral text-neutral-content flex items-center gap-2 rounded-t-lg p-2 font-semibold">
-      <.icon name="hero-bars-3" class="cursor-move " />Backlog (100)
+      <.icon name="hero-bars-3" class="cursor-move " /><%= status.title %> (100)
     </h2>
     <div class="scrollable bg-base-300 max-h-[calc(100vh-250px)] flex flex-col gap-4 overflow-y-auto rounded-b-lg p-4 shadow-inner">
       <div
         :for={{domid, task} <- @streams.tasks}
-        id={domid}
+        data-group="tasks"
+        phx-hook="Sortable"
+        id={"#{domid}-#{col_id}"}
         class="bg-base-100 rounded p-2 shadow-sm"
       >
         <a class="font-mono text-netral-content text-xs hover:underline">TSK-<%= task.id %></a>

@@ -9,7 +9,6 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
-alias DoItShop.Repo
 alias DoItShop.Tenants.Org
 alias DoItShop.Accounts
 alias DoItShop.Tasks
@@ -17,11 +16,11 @@ alias DoItShop.Tasks
 defmodule Seed do
   def seed_tenant(user) do
     create_employees(user)
+    create_task_statuses()
     create_tasks(user)
   end
 
   def random_user_id(user) do
-    IO.inspect(user)
     Enum.random(Range.new(user.id, user.id + 3))
   end
 
@@ -63,7 +62,25 @@ defmodule Seed do
       end)
   end
 
-  def create_task(user, i) do
+  def create_task_statuses do
+    [
+      %{
+        "title" => "Backlog",
+        "position" => 1
+      },
+      %{
+        "title" => "In Progress",
+        "position" => 2
+      },
+      %{
+        "title" => "Done",
+        "position" => 3
+      }
+    ]
+    |> Enum.each(fn status -> Tasks.create_status(status) end)
+  end
+
+  def create_task(user, i, status_ids) do
     today = Date.utc_today()
 
     %{
@@ -71,14 +88,18 @@ defmodule Seed do
       "notes" => "This is a note #{i}",
       "priority" => Enum.random([:high, :medium, :low]),
       "qty" => Enum.random(1..10),
-      "status" => Enum.random(["backlog", "in_progress", "done"]),
+      "status_id" => Enum.random(status_ids),
       "title" => "This is a task #{i}",
       "assigned_user_id" => Seed.random_user_id(user)
     }
   end
 
   def create_tasks(user) do
-    Enum.each(1..100, fn i -> Tasks.create_task(Seed.create_task(user, i)) end)
+    status_ids =
+      Tasks.list_task_status()
+      |> Enum.map(fn status -> status.id end)
+
+    Enum.each(1..100, fn i -> Tasks.create_task(Seed.create_task(user, i, status_ids)) end)
   end
 end
 

@@ -22,4 +22,19 @@ defmodule DoItShop.TasksFixtures do
 
     task
   end
+
+  @doc """
+  Generate a status.
+  """
+  def status_fixture(attrs \\ %{}) do
+    {:ok, status} =
+      attrs
+      |> Enum.into(%{
+        position: 42,
+        title: "some title"
+      })
+      |> DoItShop.Tasks.create_status()
+
+    status
+  end
 end

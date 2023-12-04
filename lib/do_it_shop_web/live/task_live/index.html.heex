@@ -16,7 +16,7 @@
     <:col :let={{_id, task}} label="Title"><%= task.title %></:col>
     <:col :let={{_id, task}} label="Due date"><%= task.due_date %></:col>
     <:col :let={{_id, task}} label="Priority"><%= task.priority %></:col>
-    <:col :let={{_id, task}} label="Status"><%= task.status %></:col>
+    <:col :let={{_id, task}} label="Status"><%= task.status.title %></:col>
     <:col :let={{_id, task}} label="Notes"><%= task.notes %></:col>
     <:col :let={{_id, task}} label="Qty"><%= task.qty %></:col>
     <:action :let={{_id, task}}>

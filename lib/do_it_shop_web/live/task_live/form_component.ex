@@ -28,7 +28,7 @@ defmodule DoItShopWeb.TaskLive.FormComponent do
           prompt="Choose a value"
           options={Ecto.Enum.values(DoItShop.Tasks.Task, :priority)}
         />
-        <.input field={@form[:status]} type="text" label="Status" />
+        <.input field={@form[:status_id]} type="text" label="Status" />
         <.input field={@form[:notes]} type="text" label="Notes" />
         <.input field={@form[:qty]} type="number" label="Qty" />
         <:actions>
